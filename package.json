@@ -1,0 +1,69 @@
+{
+  "name": "dsh-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DeepSeek Harness 桌面客户端外壳：窗口内加载官方 Web GUI，界面与官方 100% 一致",
+  "author": "dsh-desktop",
+  "license": "MIT",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "make-icon": "electron scripts/make-icon.mjs",
+    "dist": "electron-builder --win",
+    "release": "node scripts/release.mjs patch && electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "40.10.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "local.deepseek-harness.desktop",
+    "productName": "DeepSeek Harness",
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js"
+    ],
+    "extraResources": [
+      {
+        "from": "node-runtime",
+        "to": "node-runtime"
+      },
+      {
+        "from": "social-bridge",
+        "to": "plugins/social-bridge"
+      },
+      {
+        "from": "vision-router",
+        "to": "plugins/vision-router"
+      },
+      {
+        "from": "memory-evolve",
+        "to": "plugins/memory-evolve"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "shortcutName": "DeepSeek Harness"
+    }
+  }
+}

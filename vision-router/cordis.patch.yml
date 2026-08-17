@@ -1,0 +1,6 @@
+# dsh-vision-router bundle patch：把宿主行插入 profile 的插件名单。
+# 安装：dsh plugin --profile web add link:<本目录>
+# 注意：bundle patch 自动应用，不要手动在 profile patch 里重复 insert。
+- insert:
+    - id: dsh-vision-router
+      name: 'dsh-vision-router'

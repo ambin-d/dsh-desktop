@@ -1,0 +1,28 @@
+{
+  "name": "dsh-social-bridge",
+  "version": "0.1.0",
+  "description": "社交渠道桥接配置插件：在设置页新增「社交渠道桥接」分组（微信/Telegram/飞书/钉钉/WhatsApp 五张配置卡片），配置持久化到用户数据目录 JSON。纯插件实现，零运行时依赖，不接入真实 SDK。",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "license": "MIT",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "platform": "web"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

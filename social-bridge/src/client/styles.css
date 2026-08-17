@@ -1,0 +1,319 @@
+/*
+ * dsh-social-bridge 样式：仅使用官方 --dsw-alias-* 色板令牌。
+ * 纪律：不引入新配色、不设置 font-family（继承官方字体栈）。
+ * 类名前缀 scb-（social-channel-bridge）：曾用 sb- 与 dsh-memory-evolve
+ * 技能浏览器同名撞车（其 .sb-root { overflow:hidden } 覆盖了本区块滚动），
+ * 故全局改名，杜绝类名冲突。
+ *
+ * 排版原则（本轮重排）：
+ *   1. 统一盒模型（border-box），卡片/输入框绝不撑破内容列；
+ *   2. 标题区占满剩余宽度，描述文字完整换行显示；
+ *   3. 操作按钮成组、右对齐、彼此相邻；
+ *   4. 提示/反馈文字独立成行，不与按钮抢同一排。
+ */
+
+/* 区块根：纵向弹性布局，内容列自适应宽度 */
+.scb-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
+  padding: 4px 10px 16px 0;
+  box-sizing: border-box;
+  /* 自带滚动（确定可用）：区块高度钉在保守上限内，
+     内容超出时在区块内部下拉，滚动条常显——不依赖外层面板滚动。 */
+  max-height: 56vh;
+  overflow-y: scroll;
+}
+
+/* 常显滚动条：轨道始终可见，超出的内容下拉即达 */
+.scb-root::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scb-root::-webkit-scrollbar-track {
+  background: var(--dsw-alias-bg-layer-1);
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 5px;
+}
+
+.scb-root::-webkit-scrollbar-thumb {
+  background: var(--dsw-alias-border-l2);
+  border-radius: 5px;
+  min-height: 40px;
+}
+
+.scb-root::-webkit-scrollbar-thumb:hover {
+  background: var(--dsw-alias-label-secondary);
+}
+
+/* 统一盒模型：所有内部元素尺寸含内边距与边框，杜绝溢出 */
+.scb-root *,
+.scb-root *::before,
+.scb-root *::after {
+  box-sizing: border-box;
+}
+
+.scb-heading {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+.scb-intro {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.scb-error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--dsw-alias-state-error-primary);
+}
+
+/* ---- 渠道卡片 ---- */
+
+.scb-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0; /* 弹性收缩兜底：内容再宽也不撑破父列 */
+  padding: 14px 16px;
+  background: var(--dsw-alias-bg-layer-1);
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 10px;
+}
+
+.scb-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* 标题区占满除开关外的全部宽度，描述不再挤在窄列里 */
+.scb-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.scb-card-title h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+.scb-card-desc {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-secondary);
+  overflow-wrap: anywhere; /* 长路径/URL 也能断行，不撑破卡片 */
+}
+
+.scb-card-warn {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--dsw-alias-state-warn-primary);
+}
+
+/* ---- 启用/停用滑动开关 ---- */
+
+.scb-switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0; /* 开关永不收缩 */
+  cursor: pointer;
+}
+
+.scb-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.scb-switch-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--dsw-alias-border-l2);
+  transition: background 0.15s ease;
+}
+
+.scb-switch-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.15s ease;
+}
+
+.scb-switch input:checked + .scb-switch-track {
+  background: var(--dsw-alias-brand-primary);
+}
+
+.scb-switch input:checked + .scb-switch-track::after {
+  left: 18px;
+}
+
+/* ---- 字段 ---- */
+
+.scb-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.scb-field-label {
+  font-size: 12.5px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.scb-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* 下拉框（select）的固有宽度不允许撑破列宽 */
+  padding: 7px 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-base);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  outline: none;
+}
+
+.scb-input:focus {
+  border-color: var(--dsw-alias-brand-primary);
+}
+
+.scb-input::placeholder {
+  color: var(--dsw-alias-label-secondary);
+}
+
+/* ---- 微信桥卡片 ---- */
+
+.scb-wechat-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scb-qr-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px dashed var(--dsw-alias-border-l2);
+  border-radius: 8px;
+}
+
+.scb-qr-img {
+  width: 200px;
+  height: 200px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 4px;
+  background: #fff;
+}
+
+/* ---- 卡片底部：状态在左，按钮组在右，反馈独立成行 ---- */
+
+.scb-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap; /* 极窄宽度下允许换行，不产生水平溢出 */
+}
+
+/* 按钮组：右对齐且彼此相邻 */
+.scb-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* 反馈/提示：独占一行，不与状态和按钮抢位 */
+.scb-feedback {
+  margin: 0;
+  width: 100%;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.scb-status {
+  font-size: 12.5px;
+  white-space: normal; /* 状态文案允许换行 */
+}
+
+.scb-status-ok {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.scb-status-warn {
+  color: var(--dsw-alias-state-warn-primary);
+}
+
+.scb-status-muted {
+  color: var(--dsw-alias-label-secondary);
+}
+
+.scb-hint-ok {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.scb-hint-err {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.scb-save {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: var(--dsw-alias-brand-primary);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.scb-save:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* 危险操作（断开连接）：描边 + 错误色文字，背景透明 */
+.scb-save-danger {
+  background: transparent;
+  color: var(--dsw-alias-state-error-primary);
+  border: 1px solid var(--dsw-alias-state-error-primary);
+}
+
+/* 幽灵按钮（检查连接）：描边 + 品牌色文字，背景透明 */
+.scb-save-ghost {
+  background: transparent;
+  color: var(--dsw-alias-brand-primary);
+  border: 1px solid var(--dsw-alias-brand-primary);
+}

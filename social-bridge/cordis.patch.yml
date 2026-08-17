@@ -1,0 +1,9 @@
+# dsh-social-bridge bundle patch：把宿主行插入 profile 的插件名单。
+# 浏览器半走包内 `dsh.client` 清单（client-modules 按包名服务 lib/client.js），
+# 本行在启动时实例化宿主插件（配置存储 + Web API）。
+# 安装：dsh plugin --profile web add link:<本目录>
+# 注意：bundle patch 会自动应用，不要再在 profile 的 cordis.patch.yml 里手动 insert 本行
+# （重复 id 会让加载器报 duplicate loader entry id 无法启动）。
+- insert:
+    - id: dsh-social-bridge
+      name: 'dsh-social-bridge'

@@ -1,0 +1,18 @@
+{
+  "name": "dsh-vision-router",
+  "version": "0.1.0",
+  "description": "自动视觉路由：检测到模型请求携带图片内容时，自动把图片转成文字证据（图转文字后仍由主模型作答），无需人工切换模型。",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
