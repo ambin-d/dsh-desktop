@@ -21,11 +21,12 @@
  *   6. 只处理 MessageType.USER 的 1 对 1 私聊；文本用
  *      WeChatClient.extractText 提取。
  *
- * 本轮范围：文本收发 + 状态机 + 持久化；媒体收发不在本轮（库已提供
- * sendMedia/downloadMedia，后续可扩展）。
+ * 媒体收发：入站图片（IMAGE=2）/文件（FILE=4）/视频（VIDEO=5）经
+ * downloadMediaItem 走库的 CDN 下载 + AES 解密（与语音同链路），
+ * 由宿主半决定落盘与进会话方式。
  */
 
-import { MessageType, WeChatClient } from '../vendor/wechat-ilink-client/dist/index.mjs'
+import { MessageItemType, MessageType, WeChatClient } from '../vendor/wechat-ilink-client/dist/index.mjs'
 
 // ---- 运行态（进程内单实例） -------------------------------------------------
 
@@ -232,10 +233,26 @@ export function parseInbound(msg) {
   const userId = String(msg.from_user_id || '').trim()
   if (!userId) return { ok: false }
   const text = String(WeChatClient.extractText?.(msg) ?? '').trim()
-  // 检测媒体条目（本轮不下载媒体，仅提示）
   const items = Array.isArray(msg.item_list) ? msg.item_list : []
-  const hasMedia = items.some((item) => WeChatClient.isMediaItem?.(item))
-  return { ok: true, userId, text, hasMedia, contextToken: String(msg.context_token || '') }
+  // 检测媒体条目（语音单独走识别链路，不计入"媒体未下载"提示）
+  const hasMedia = items.some((item) =>
+    WeChatClient.isMediaItem?.(item) && Number(item?.type) !== MessageItemType.VOICE,
+  )
+  return { ok: true, userId, text, hasMedia, contextToken: String(msg.context_token || ''), items }
+}
+
+/**
+ * 下载媒体条目（CDN 下载 + AES 解密，图片/文件/视频/语音共用）。
+ * 库的 downloadMedia 按条目类型分派，返回 { data, kind, fileName? }：
+ * kind = image | voice | file | video；文件条目带原始文件名。
+ */
+export async function downloadMediaItem(item) {
+  if (!client || typeof client.downloadMedia !== 'function') {
+    throw new Error('微信桥未连接，无法下载媒体')
+  }
+  const downloaded = await client.downloadMedia(item)
+  if (!downloaded?.data) throw new Error('媒体下载结果为空')
+  return downloaded
 }
 
 /** 给指定微信用户回复文本（自动追加署名）。 */

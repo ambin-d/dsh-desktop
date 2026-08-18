@@ -1,9 +1,9 @@
 {
   "name": "dsh-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "DeepSeek Harness 桌面客户端外壳：窗口内加载官方 Web GUI，界面与官方 100% 一致",
-  "author": "dsh-desktop",
+  "author": "Ambin.D <ambin5566@gmail.com>",
   "license": "MIT",
   "type": "module",
   "main": "main.js",
@@ -44,6 +44,10 @@
       {
         "from": "memory-evolve",
         "to": "plugins/memory-evolve"
+      },
+      {
+        "from": "dsh-sidebar-shortcuts",
+        "to": "plugins/dsh-sidebar-shortcuts"
       }
     ],
     "win": {

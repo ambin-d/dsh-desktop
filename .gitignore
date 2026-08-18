@@ -1,6 +1,6 @@
 # 依赖与构建产物
 node_modules/
-/dist/
+dist/
 npm-install.log
 
 # 日志与系统文件

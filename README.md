@@ -10,23 +10,29 @@
 ## 📖 用户文档
 
 - [安装说明](安装说明.md) —— 安装包、运行依赖、常用操作、故障排查
-- [功能说明](功能说明.md) —— 桌面壳 / 长期记忆 / 微信桥 / 自动视觉 / Lucky 预设 / 模型配置
+- [功能说明](功能说明.md) —— 桌面壳 / 长期记忆 / 微信桥 / 自动视觉 / 侧边栏快捷入口 / Lucky 预设 / 模型配置
+- [更新说明](更新说明.md) —— 各版本更新内容（当前 v1.0.1）
 
 ## 目录结构
 
 ```
 desktop/
-├── main.js                # Electron 主进程（全部中文注释）
-├── package.json           # 依赖与 electron-builder 打包配置
+├── main.js                      # Electron 主进程（全部中文注释）
+├── package.json                 # 依赖与 electron-builder 打包配置
 ├── scripts/
-│   └── make-icon.mjs      # 图标生成：官方 favicon.svg → build/icon.ico
+│   ├── make-icon.mjs            # 图标生成：官方 favicon.svg → build/icon.ico
+│   └── release.mjs              # 发布脚本：升版本号（不允许重复版本号）
 ├── assets/
-│   └── favicon.svg        # 官方仓库 apps/web/public/favicon.svg 的原件
+│   └── favicon.svg              # 官方仓库 apps/web/public/favicon.svg 的原件
 ├── node-runtime/
-│   └── node.exe           # 随安装包分发的 Node 运行时（宿主进程用它运行）
-└── build/
-    ├── icon.ico           # 窗口 / 任务栏 / 安装包图标（npm run make-icon 生成）
-    └── icon.png           # 256×256 备用图标
+│   └── node.exe                 # 随安装包分发的 Node 运行时（宿主进程用它运行）
+├── build/
+│   ├── icon.ico                 # 窗口 / 任务栏 / 安装包图标（npm run make-icon 生成）
+│   └── icon.png                 # 256×256 备用图标
+├── social-bridge/               # 插件：社交渠道桥接（微信桥 + 四渠道配置）
+├── vision-router/               # 插件：自动视觉（贴图自动转写）
+├── memory-evolve/               # 插件：长期记忆（五轨记忆/待办/技能）
+└── dsh-sidebar-shortcuts/       # 插件：侧边栏快捷入口（内嵌插件市场 + 知识库 + 关于）
 ```
 
 ## 工作原理
@@ -65,11 +71,13 @@ npm start
 ## 打包成安装程序（Windows）
 
 ```powershell
-npm run dist
+npm run release   # 升版本号（patch）→ 打包（用户规则：每次封装版本号必须递增）
+# 或分开执行：
+node scripts/release.mjs patch && npm run dist
 ```
 
 产物在 `desktop\dist\`：
-- `DeepSeek Harness Setup 1.0.0.exe` — NSIS 安装包（向导式，可选安装目录）
+- `DeepSeek Harness Setup <版本号>.exe` — NSIS 安装包（向导式，可选安装目录）
 - `win-unpacked\` — 免安装绿色版（直接运行 `DeepSeek Harness.exe`）
 
 安装包特性：

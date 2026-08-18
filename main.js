@@ -119,7 +119,10 @@ async function startHost(port) {
   dshChild = spawn(resolveNode(), [...nodeArgs, bin, 'web', '--port', port], {
     cwd,                                         // 官方 CLI 习惯：在仓库根/主目录下运行
     stdio: ['ignore', 'inherit', 'inherit'],     // 宿主日志透传到本进程控制台
-    env: { ...process.env },                     // 完整继承环境（含 DSH_HOME）→ 会话/设置/插件与官方共用
+    env: {
+      ...process.env,                            // 完整继承环境（含 DSH_HOME）→ 会话/设置/插件与官方共用
+      DSH_DESKTOP_VERSION: app.getVersion(),     // 桌面客户端版本号 → 宿主「设置 → 关于」展示
+    },
     windowsHide: true,                           // 不弹子进程控制台黑窗
   });
 

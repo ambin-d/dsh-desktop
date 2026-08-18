@@ -17,12 +17,13 @@
  * 任何微信 hook 依赖（wcferry 等）、其他渠道的真实接入。
  */
 
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, renameSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
-import { homedir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { URL } from 'node:url'
 import * as wechat from './wechat.js'
+import { transcribeFile, voiceExt } from './asr.js'
 
 // ---- 插件身份（loader 读取 name/inject/apply） ------------------------------
 export const name = 'dsh-social-bridge'
@@ -179,13 +180,23 @@ function extractAssistantText(message) {
  * 插件保持零依赖（loader 只在插件自身 node_modules 链上解析导入），
  * 这里按 dsh-llm 的 createUserMessage 语义本地构造：
  * 新鲜 UUID 作为稳定身份、内容与来源深冻结（发布会话日志前不可变）。
+ * 来源标记为 kind:'user'：微信消息就是用户本人说的，标记成 user 才能被
+ * 官方标题生成（session/title 只认 kind:'user' 的消息）、目标授权
+ * （create_goal 只认直接真人请求）、以及 GUI 会话列表的「非空白」判定识别。
+ * @param content - 内容块数组（文本/图片附件块），传字符串时包成单文本块。
  */
-function createWechatUserMessage(text) {
+function createWechatUserMessage(content) {
+  const blocks = (Array.isArray(content) && content.length > 0)
+    ? content
+    : [{ type: 'text', text: typeof content === 'string' ? content : '（空消息）' }]
   return Object.freeze({
     id: randomUUID(),
     role: 'user',
-    content: Object.freeze([Object.freeze({ type: 'text', text })]),
-    source: Object.freeze({ kind: 'plugin', plugin: 'dsh-social-bridge' }),
+    content: Object.freeze(blocks.map((block) => Object.freeze({
+      ...block,
+      ...(block?.attachment ? { attachment: Object.freeze({ ...block.attachment }) } : {}),
+    }))),
+    source: Object.freeze({ kind: 'user' }),
   })
 }
 
@@ -232,16 +243,326 @@ export function apply(ctx, rawConfig = {}) {
 
   // ---- 入站：微信消息 → 现有会话消息流 --------------------------------------
 
-  /** 解析接收会话：优先配置记住的 sessionId，否则取第一个根会话。 */
-  function resolveTargetAgent() {
+  /** 解析接收会话：优先配置记住的 sessionId；不在线时从持久化恢复；再退到第一个根会话。 */
+  async function resolveTargetAgent() {
     const svc = ctx.get('agents')
     if (!svc) return null
     if (config.wechat.sessionId) {
       const agent = svc.get?.(config.wechat.sessionId)
       if (agent) return agent
+      // 记住的会话不在线（宿主重启后的冷会话）：按持久化头恢复，
+      // 保持「消息继续进同一会话」而不是静默改投别的会话
+      const resumed = await resumeColdSession(svc, config.wechat.sessionId)
+      if (resumed) return resumed
     }
     const roots = svc.roots?.() || []
     return roots[0] ?? null
+  }
+
+  /**
+   * 从持久化恢复一个冷会话（与 GUI 打开旧会话同路径）：
+   * 按会话头记录的预设挂载 + 默认模型选择。失败返回 null，由调用方退回默认会话。
+   */
+  async function resumeColdSession(svc, sessionId) {
+    if (typeof svc.resume !== 'function') return null
+    const persistence = ctx.get('sessionPersistence')
+    if (!persistence || typeof persistence.inspect !== 'function') return null
+    let presetId
+    try {
+      const inspected = await persistence.inspect(sessionId)
+      presetId = inspected?.meta?.agentPreset
+    } catch { /* 检查失败则按默认预设处理 */ }
+    let setup
+    try {
+      const presets = ctx.get('agentPresets')
+      if (presets && typeof presets.resolve === 'function' && typeof presets.mount === 'function') {
+        const resolved = await presets.resolve(presetId || undefined)
+        const id = String(resolved?.id ?? '').trim() || undefined
+        if (id) {
+          setup = async (agentCtx) => { await presets.mount(agentCtx, id) }
+        }
+      }
+    } catch (error) {
+      console.warn(`[微信桥] 恢复会话预设解析失败（${sessionId}）: ${error?.message ?? error}`)
+    }
+    const selection = defaultModelSelection()
+    try {
+      const handle = await svc.resume({
+        resumeSessionId: sessionId,
+        ...(selection ? { agentOptions: selection } : {}),
+        ...(setup ? { setup } : {}),
+      })
+      return handle?.agent ?? null
+    } catch (error) {
+      console.warn(`[微信桥] 恢复会话 ${sessionId} 失败（退回默认会话）: ${error?.message ?? error}`)
+      return null
+    }
+  }
+
+  /**
+   * 当前默认模型选择（与 GUI 新建会话同源：agentDefaultModel 服务）。
+   * 程序化新建的会话必须带上它——缺省时 {{model}} 提示词变量为空，
+   * 回合在组装阶段就抛错，表现为「微信无回复、会话日志无记录」。
+   */
+  function defaultModelSelection() {
+    const service = ctx.get('agentDefaultModel')
+    const selection = typeof service?.currentSelection === 'function'
+      ? service.currentSelection()
+      : undefined
+    if (!selection?.provider || !selection?.model) return undefined
+    return { provider: selection.provider, model: selection.model }
+  }
+
+  /**
+   * 把新建会话挂到工作区（与 GUI 新建同路径；不挂会显示在「未分组」）。
+   * 失败只影响左侧分组显示，不阻断会话本身。
+   */
+  async function attachToWorkspace(sessionId, cwd) {
+    const registry = ctx.get('workspaceRegistry')
+    if (!registry || !cwd) return null
+    try {
+      let ws = typeof registry.resolveByPath === 'function'
+        ? await registry.resolveByPath(cwd)
+        : undefined
+      if (ws === undefined && typeof registry.create === 'function') {
+        ws = await registry.create(cwd)
+      }
+      if (ws && typeof ws.attachSession === 'function') {
+        await ws.attachSession(sessionId)
+      }
+      return ws
+    } catch (error) {
+      console.warn(`[微信桥] 会话 ${sessionId} 挂接工作区失败（仅影响分组显示）: ${error?.message ?? error}`)
+      return null
+    }
+  }
+
+  /**
+   * 取一个会话的友好名称：官方标题服务 → 会话头标题 → 首条用户消息摘要 →
+   * 创建时间（纯空白会话）。保证「列出会话」里每个会话都可区分。
+   */
+  function sessionLabel(agent) {
+    try {
+      const titled = ctx.get('sessionTitle')?.get?.(agent?.session)?.title
+      if (titled) return String(titled)
+    } catch { /* 标题服务不可用时继续兜底 */ }
+    const session = agent?.session
+    const header = String(session?.header?.title || '').trim()
+    if (header) return header
+    // 未命名但有消息的会话：用首条用户消息摘要区分（微信上识别度高）
+    const events = session?.events ?? []
+    const firstUser = events.find((event) => event?.type === 'user/message')
+    if (firstUser) {
+      const summary = extractAssistantText(firstUser?.data?.message)
+        .replace(/\s+/g, ' ')
+        .trim()
+      if (summary) return summary.length > 14 ? `${summary.slice(0, 14)}…` : summary
+    }
+    // 纯空白会话：显示创建时间，避免一堆「未命名会话」无法区分
+    const stamp = session?.header?.createdAt ? new Date(session.header.createdAt) : new Date()
+    const pad = (n) => String(n).padStart(2, '0')
+    return `新会话 · ${pad(stamp.getMonth() + 1)}-${pad(stamp.getDate())} ${pad(stamp.getHours())}:${pad(stamp.getMinutes())}`
+  }
+
+  // ---- 入站媒体（图片/文件/视频）：下载 → 落盘 → 图片进视觉链路 --------------
+
+  /** 媒体落盘目录：$DSH_HOME/storages/social-bridge/media/<日期>/。 */
+  function mediaDir() {
+    const now = new Date()
+    const pad = (n) => String(n).padStart(2, '0')
+    const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+    return join(storageDir(), 'media', date)
+  }
+
+  /** 文件名字段清洗：去掉路径分隔符与控制字符，防目录穿越/脏名。 */
+  function safeFileName(name) {
+    const base = String(name || '').replace(/[/\\:*?"<>|\u0000-\u001f]/g, '_').trim()
+    return base || 'unnamed'
+  }
+
+  /** 图片字节嗅探媒体类型（attachments.saveImage 要求声明与字节一致）。 */
+  function sniffImageType(data) {
+    if (data.length > 8 && data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4e && data[3] === 0x47) return 'image/png'
+    if (data.length > 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) return 'image/jpeg'
+    if (data.length > 5 && data[0] === 0x47 && data[1] === 0x49 && data[2] === 0x46 && data[3] === 0x38) return 'image/gif'
+    if (data.length > 12 && data[0] === 0x52 && data[1] === 0x49 && data[2] === 0x46 && data[3] === 0x46
+      && data[8] === 0x57 && data[9] === 0x45 && data[10] === 0x42 && data[11] === 0x50) return 'image/webp'
+    return undefined
+  }
+
+  /** 图片媒体类型 → 文件扩展名。 */
+  const IMAGE_EXT = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif', 'image/webp': '.webp' }
+
+  /**
+   * 处理入站媒体条目（IMAGE=2 / FILE=4 / VIDEO=5）：
+   * 下载 + AES 解密 → 落盘媒体目录；图片另经 attachments.saveImage 注册，
+   * 生成图片内容块交给 vision-router 在 pre-step 转写。
+   * 单个条目失败不阻断其余条目，失败原因写进备注文本。
+   * @returns { imageBlocks, imagePaths, fileNotes }
+   */
+  async function ingestWechatMedia(items) {
+    const imageBlocks = []
+    const imagePaths = []
+    const fileNotes = []
+    if (!Array.isArray(items) || items.length === 0) return { imageBlocks, imagePaths, fileNotes }
+    const attachments = ctx.get('attachments')
+    const dir = mediaDir()
+    const stamp = Date.now()
+    let index = 0
+    for (const item of items) {
+      const type = Number(item?.type)
+      if (type !== 2 && type !== 4 && type !== 5) continue // 只处理图片/文件/视频（语音走 ASR 链路）
+      index += 1
+      const typeName = type === 2 ? '图片' : type === 5 ? '视频' : '文件'
+      try {
+        const media = await wechat.downloadMediaItem(item)
+        const data = Buffer.isBuffer(media.data) ? media.data : Buffer.from(media.data)
+        if (data.length === 0) throw new Error('下载结果为空')
+        mkdirSync(dir, { recursive: true })
+        if (media.kind === 'image' || (media.kind === undefined && type === 2)) {
+          const mediaType = sniffImageType(data) || 'image/jpeg'
+          const ext = IMAGE_EXT[mediaType] || '.jpg'
+          const name = `wx-img-${stamp}-${index}${ext}`
+          const path = join(dir, name)
+          writeFileSync(path, data)
+          imagePaths.push(path)
+          // 注册进 attachments：vision-router 在 agent/pre-step 按 attachmentId 转写
+          if (typeof attachments?.saveImage === 'function') {
+            try {
+              const ref = await attachments.saveImage({ data, mediaType, name })
+              imageBlocks.push({ type: 'image', attachment: { ...ref } })
+            } catch (error) {
+              fileNotes.push(`${typeName}已保存到 ${path}，但未能进入视觉链路（${error?.message ?? error}）`)
+            }
+          } else {
+            fileNotes.push(`${typeName}已保存到 ${path}（当前环境无图片附件服务，本轮按文件处理）`)
+          }
+        } else {
+          const name = media.kind === 'file'
+            ? safeFileName(item?.file_item?.file_name)
+            : `wx-video-${stamp}-${index}.mp4`
+          const path = join(dir, name)
+          writeFileSync(path, data)
+          fileNotes.push(`${typeName}已保存：${path}`)
+        }
+      } catch (error) {
+        fileNotes.push(`${typeName}下载失败：${error?.message ?? error}`)
+      }
+    }
+    return { imageBlocks, imagePaths, fileNotes }
+  }
+
+  /**
+   * 微信内指令：不需要碰设置页，直接在微信上管理接收会话。
+   * 支持：「列出会话」查看列表；「切换会话 N」按编号切换；「切换会话 关键词」按标题切换。
+   * 指令命中时直接回复微信（不进会话流）；未命中返回 null，走正常消息流。
+   */
+  async function handleWechatCommand(userId, text) {
+    const command = text.trim()
+    if (command === '列出会话' || command === '会话列表' || command === '会话') {
+      const svc = ctx.get('agents')
+      // 只列根会话（用户聊天会话），不含子代理
+      const roots = svc?.roots?.() || []
+      const rows = roots.map((agent, index) => {
+        const label = sessionLabel(agent)
+        const mark = config.wechat.sessionId === agent.id ? '  ← 当前接收' : ''
+        return `${index + 1}. ${label}${mark}`
+      })
+      return rows.length
+        ? `当前会话列表：\n${rows.join('\n')}\n回复「切换会话 编号」切换；回复「新会话」自动新建并切换`
+        : '当前没有活跃会话'
+    }
+    const match = command.match(/^切换会话\s*(.+)$/)
+    if (match) {
+      const key = match[1].trim()
+      const svc = ctx.get('agents')
+      const roots = svc?.roots?.() || []
+      let target = null
+      const number = Number(key)
+      if (Number.isInteger(number) && number >= 1 && number <= roots.length) {
+        target = roots[number - 1]
+      } else {
+        target = roots.find((agent) => sessionLabel(agent).includes(key))
+      }
+      if (!target) return '没找到该会话，回复「列出会话」查看编号'
+      config.wechat.sessionId = target.id
+      pending = null // 切换后未完成的回发状态作废
+      saveConfig(config)
+      return `已切换接收会话：${sessionLabel(target)}`
+    }
+    if (command === '新会话') {
+      // 程序化新建会话（与 GUI 新建同路径）：默认预设 + 默认模型 + 继承当前接收会话的工作目录
+      const svc = ctx.get('agents')
+      if (!svc?.create) return '当前环境不支持程序化新建会话'
+      const current = svc.get?.(config.wechat.sessionId)
+      const cwd = current?.session?.header?.cwd || homedir()
+      const sessionId = `session-${randomUUID()}`
+      let presetId = undefined
+      let setup = undefined
+      try {
+        const presets = ctx.get('agentPresets')
+        if (presets && typeof presets.resolve === 'function' && typeof presets.mount === 'function') {
+          const resolved = await presets.resolve(undefined) // 默认预设（当前 lucky）
+          presetId = String(resolved?.id ?? '').trim() || undefined
+          if (presetId) {
+            setup = async (agentCtx) => { await presets.mount(agentCtx, presetId) }
+          }
+        }
+      } catch (error) {
+        console.warn(`[微信桥] 预设解析失败（新会话降级不挂载）: ${error?.message ?? error}`)
+      }
+      // 默认模型选择（与 GUI 新建同源）：缺省时新会话回合在提示词组装阶段抛错
+      const selection = defaultModelSelection()
+      try {
+        await svc.create({
+          sessionId,
+          ...(selection ? { agentOptions: selection } : {}),
+          meta: {
+            cwd,
+            ...(presetId ? { agentPreset: presetId } : {}),
+          },
+          ...(setup ? { setup } : {}),
+        })
+      } catch (error) {
+        return `新建会话失败：${error?.message ?? error}`
+      }
+      // 挂到工作区（左侧「项目」分组可见，与 GUI 新建一致）
+      await attachToWorkspace(sessionId, cwd)
+      config.wechat.sessionId = sessionId
+      pending = null
+      saveConfig(config)
+      return '已新建会话并切换为接收会话，之后的微信消息都进新会话'
+    }
+    return null
+  }
+
+  /**
+   * 微信语音 → 本地 ASR 转写：
+   * 下载语音字节（CDN+解密）→ 落临时文件 → ffmpeg 解成 16k PCM → DashScope 转写。
+   * @returns { ok, text } 或 { ok:false, reason }
+   */
+  async function transcribeWechatVoice(item) {
+    let dir = null
+    try {
+      const downloaded = await wechat.downloadMediaItem(item)
+      dir = mkdtempSync(join(tmpdir(), 'dsh-voice-'))
+      const file = join(dir, `voice${voiceExt(item?.voice_item?.encode_type ?? 0)}`)
+      writeFileSync(file, Buffer.from(downloaded.data))
+      const credentials = ctx.get('credentials')
+      const resolved = typeof credentials?.resolve === 'function'
+        ? await credentials.resolve('ALIYUN_ASR_KEY')
+        : undefined
+      if (!resolved?.value) return { ok: false, reason: 'ASR 凭据未配置（缺少 ALIYUN_ASR_KEY）' }
+      const text = await transcribeFile(file, resolved.value)
+      const clean = text.trim()
+      return clean ? { ok: true, text: clean } : { ok: false, reason: '转写结果为空' }
+    } catch (error) {
+      return { ok: false, reason: error?.message ?? String(error) }
+    } finally {
+      if (dir) {
+        try { rmSync(dir, { recursive: true, force: true }) } catch { /* 忽略清理失败 */ }
+      }
+    }
   }
 
   async function onWechatMessage(msg) {
@@ -255,7 +576,39 @@ export function apply(ctx, rawConfig = {}) {
       }
       saveConfig(config)
     }
-    const agent = resolveTargetAgent()
+    // 微信内指令优先：命中则直接回复微信，不进会话流
+    const commandReply = await handleWechatCommand(parsed.userId, parsed.text)
+    if (commandReply !== null) {
+      try {
+        await wechat.sendReply(parsed.userId, commandReply, '')
+      } catch (error) {
+        console.error(`[微信桥] 指令回复发送失败: ${error?.message ?? error}`)
+      }
+      return
+    }
+    // 语音处理：优先服务端转写（voice_item.text，库的 extractText 已取出），
+    // 没有则走本地 ASR 链路（下载 → ffmpeg 解码 → DashScope 转写）
+    const voiceItem = (parsed.items || []).find((item) => Number(item?.type) === 3)
+    if (voiceItem) {
+      if (parsed.text) {
+        // 服务端已转写：直接标注使用，不再误报"媒体未下载"
+        parsed.text = `【微信语音】${parsed.text}`
+      } else {
+        const transcript = await transcribeWechatVoice(voiceItem)
+        if (transcript.ok) {
+          parsed.text = `【微信语音】${transcript.text}`
+        } else {
+          // 转写失败：直接回微信说明原因（不静默），并在会话流中留记录
+          try {
+            await wechat.sendReply(parsed.userId, `语音已收到，但自动转写失败：${transcript.reason}`, '')
+          } catch (error) {
+            console.error(`[微信桥] 转写失败说明发送失败: ${error?.message ?? error}`)
+          }
+          parsed.text = `（收到一条微信语音，自动转写失败：${transcript.reason}）`
+        }
+      }
+    }
+    const agent = await resolveTargetAgent()
     if (!agent) {
       lastInbound = { userId: parsed.userId, text: parsed.text.slice(0, 200), at: Date.now() }
       console.warn(`[微信桥] 收到消息但当前没有活跃会话可接收（from=${parsed.userId}）`)
@@ -266,17 +619,27 @@ export function apply(ctx, rawConfig = {}) {
       config.wechat.sessionId = agent.id
       saveConfig(config)
     }
-    let text = parsed.text
-    if (parsed.hasMedia) {
-      text = text
-        ? `${text}\n\n（用户发来媒体内容，本轮仅支持文本，暂未下载）`
-        : '（用户发来媒体内容，本轮仅支持文本，暂未下载）'
+    // 媒体下载：图片进视觉链路（vision-router 在 pre-step 转写），文件/视频落盘并告知路径
+    const media = await ingestWechatMedia(parsed.items)
+    const prefix = `【微信消息 · 来自 ${parsed.userId}】`
+    const contentBlocks = []
+    if (parsed.text) contentBlocks.push({ type: 'text', text: `${prefix}\n${parsed.text}` })
+    for (const block of media.imageBlocks) contentBlocks.push(block)
+    const notes = []
+    if (media.imagePaths.length > 0) {
+      notes.push(`图片原图已保存：${media.imagePaths.join('、')}`)
     }
-    const content = `【微信消息 · 来自 ${parsed.userId}】\n${text || '（空消息）'}`
-    agent.followup(createWechatUserMessage(content))
+    notes.push(...media.fileNotes)
+    if (notes.length > 0) {
+      contentBlocks.push({ type: 'text', text: `【微信媒体】\n${notes.join('\n')}` })
+    }
+    if (contentBlocks.length === 0) {
+      contentBlocks.push({ type: 'text', text: `${prefix}\n（空消息）` })
+    }
+    agent.followup(createWechatUserMessage(contentBlocks))
     pending = { sessionId: agent.id, userId: parsed.userId, lastText: '' }
     lastInbound = { userId: parsed.userId, text: parsed.text.slice(0, 200), at: Date.now() }
-    console.log(`[微信桥] 入站消息已投递到会话 ${agent.id}（from=${parsed.userId}）`)
+    console.log(`[微信桥] 入站消息已投递到会话 ${agent.id}（from=${parsed.userId}，内容块 ${contentBlocks.length} 个）`)
   }
 
   // ---- 出站：回合结束 → 助手最终回复发回微信（自动署名） --------------------
@@ -305,6 +668,21 @@ export function apply(ctx, rawConfig = {}) {
       // 发送失败必须留下可查原因，不静默丢消息
       lastSendResult = { ok: false, error: err?.message ?? String(err), at: Date.now() }
       console.error(`[微信桥] 回复发送失败: ${lastSendResult.error}`)
+    }
+  })
+
+  // 回合报错（模型调用失败等）→ 把原因发回微信，避免「消息石沉大海」
+  ctx.on('agent/error', async (payload) => {
+    const agentId = payload?.agent?.id
+    if (!pending || agentId !== pending.sessionId) return
+    const p = pending
+    pending = null
+    const reason = payload?.error?.message ?? String(payload?.error ?? '未知错误')
+    try {
+      await wechat.sendReply(p.userId, `本轮处理出错，未生成回复：${reason}`, config.wechat.signature)
+      lastSendResult = { ok: true, at: Date.now() }
+    } catch (err) {
+      console.error(`[微信桥] 错误说明发送失败: ${err?.message ?? String(err)}`)
     }
   })
 
