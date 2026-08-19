@@ -1,0 +1,13 @@
+{
+  "name": "dsh-session-title-suffix",
+  "version": "0.1.0",
+  "description": "按会话预设为自动生成的会话标题追加 AI 名后缀，统一「任务描述(AI名)」命名规范（映射由 profile 补丁 config.suffixes 配置，代码不含任何具体人名/路径）。",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "MIT"
+}

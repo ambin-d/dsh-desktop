@@ -454,9 +454,22 @@ export function apply(ctx, rawConfig = {}) {
 
   /**
    * 微信内指令：不需要碰设置页，直接在微信上管理接收会话。
-   * 支持：「列出会话」查看列表；「切换会话 N」按编号切换；「切换会话 关键词」按标题切换。
+   * 支持：「列出会话」查看列表；「切换会话 N」按编号切换；「切换会话 关键词」按标题切换；
+   * 「新会话 [预设关键词]」按预设新建并切换；「列出预设」查看可用预设。
    * 指令命中时直接回复微信（不进会话流）；未命中返回 null，走正常消息流。
    */
+
+  /** 预设关键词 → 预设 id 别名表（大小写不敏感；键全部小写）。 */
+  const PRESET_ALIASES = {
+    当当: 'dangdang',
+    dangdang: 'dangdang',
+    秘书: 'dangdang-secretary',
+    当当秘书: 'dangdang-secretary',
+    'dangdang-secretary': 'dangdang-secretary',
+    丁丁: 'dingding',
+    dingding: 'dingding',
+  }
+
   async function handleWechatCommand(userId, text) {
     const command = text.trim()
     if (command === '列出会话' || command === '会话列表' || command === '会话') {
@@ -490,26 +503,55 @@ export function apply(ctx, rawConfig = {}) {
       saveConfig(config)
       return `已切换接收会话：${sessionLabel(target)}`
     }
-    if (command === '新会话') {
-      // 程序化新建会话（与 GUI 新建同路径）：默认预设 + 默认模型 + 继承当前接收会话的工作目录
+    if (command === '列出预设' || command === '预设列表' || command === '预设') {
+      const presets = ctx.get('agentPresets')
+      let rows = []
+      try {
+        const list = (await presets?.list?.()) ?? []
+        rows = list.map((p) => `${p?.id}${p?.id === 'lucky' ? '（默认）' : ''}`)
+      } catch { /* 列表失败按空处理 */ }
+      return rows.length
+        ? `可用预设：${rows.join(' / ')}\n用法：新会话 [预设关键词]，如「新会话 当当」「新会话 秘书」`
+        : '当前没有可用的预设'
+    }
+    const newSessionMatch = command.match(/^新会话(?:\s+(.+))?$/)
+    if (newSessionMatch) {
+      // 程序化新建会话（与 GUI 新建同路径）：指定预设（可带关键词）+ 默认模型 + 继承当前接收会话的工作目录
       const svc = ctx.get('agents')
       if (!svc?.create) return '当前环境不支持程序化新建会话'
+      const keyword = newSessionMatch[1] ?? ''
+      const presets = ctx.get('agentPresets')
+      let presetId
+      let presetLabel = ''
+      if (presets && typeof presets.resolve === 'function') {
+        const clean = keyword.trim().toLowerCase()
+        const aliasTarget = clean === '' ? undefined : PRESET_ALIASES[clean]
+        const target = clean === '' ? undefined : (aliasTarget ?? clean)
+        try {
+          const resolved = await presets.resolve(target) // 无参数=默认预设；别名/关键词=指定预设
+          presetId = String(resolved?.id ?? '').trim() || undefined
+          presetLabel = String(resolved?.name ?? resolved?.id ?? presetId ?? '').trim()
+        } catch (error) {
+          if (clean !== '') {
+            // 指定了预设但解析失败 → 列出可用预设，不创建会话
+            let available = ''
+            try {
+              const list = (await presets.list?.()) ?? []
+              available = list.map((p) => String(p?.id ?? '')).filter(Boolean).join(' / ')
+            } catch { /* 列表失败走兜底文案 */ }
+            if (!available) available = 'lucky / dangdang / dangdang-secretary'
+            return `没找到预设「${keyword.trim()}」。可用预设：${available}\n用法：新会话 [预设关键词]，不带关键词=默认预设`
+          }
+          // 无参数时默认预设解析失败 → 降级不挂载（保持现状行为）
+          console.warn(`[微信桥] 预设解析失败（新会话降级不挂载）: ${error?.message ?? error}`)
+        }
+      }
       const current = svc.get?.(config.wechat.sessionId)
       const cwd = current?.session?.header?.cwd || homedir()
       const sessionId = `session-${randomUUID()}`
-      let presetId = undefined
-      let setup = undefined
-      try {
-        const presets = ctx.get('agentPresets')
-        if (presets && typeof presets.resolve === 'function' && typeof presets.mount === 'function') {
-          const resolved = await presets.resolve(undefined) // 默认预设（当前 lucky）
-          presetId = String(resolved?.id ?? '').trim() || undefined
-          if (presetId) {
-            setup = async (agentCtx) => { await presets.mount(agentCtx, presetId) }
-          }
-        }
-      } catch (error) {
-        console.warn(`[微信桥] 预设解析失败（新会话降级不挂载）: ${error?.message ?? error}`)
+      let setup
+      if (presets && presetId && typeof presets.mount === 'function') {
+        setup = async (agentCtx) => { await presets.mount(agentCtx, presetId) }
       }
       // 默认模型选择（与 GUI 新建同源）：缺省时新会话回合在提示词组装阶段抛错
       const selection = defaultModelSelection()
@@ -531,7 +573,9 @@ export function apply(ctx, rawConfig = {}) {
       config.wechat.sessionId = sessionId
       pending = null
       saveConfig(config)
-      return '已新建会话并切换为接收会话，之后的微信消息都进新会话'
+      return presetLabel
+        ? `已新建会话并切换为接收会话（预设：${presetLabel}），之后的微信消息都进新会话`
+        : '已新建会话并切换为接收会话，之后的微信消息都进新会话'
     }
     return null
   }

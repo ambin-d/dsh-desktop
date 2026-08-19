@@ -1,6 +1,6 @@
 {
   "name": "dsh-desktop",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "private": true,
   "description": "DeepSeek Harness 桌面客户端外壳：窗口内加载官方 Web GUI，界面与官方 100% 一致",
   "author": "Ambin.D <ambin5566@gmail.com>",
@@ -48,6 +48,14 @@
       {
         "from": "dsh-sidebar-shortcuts",
         "to": "plugins/dsh-sidebar-shortcuts"
+      },
+      {
+        "from": "@deepseek-ai/dsh-typert-registry",
+        "to": "plugins/@deepseek-ai/dsh-typert-registry"
+      },
+      {
+        "from": "session-title-suffix",
+        "to": "plugins/session-title-suffix"
       }
     ],
     "win": {

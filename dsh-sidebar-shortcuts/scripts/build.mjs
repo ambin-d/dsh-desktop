@@ -1,14 +1,18 @@
 /**
- * 构建 dsh-sidebar-shortcuts 客户端 bundle。
+ * 构建 dsh-sidebar-shortcuts 宿主与客户端 bundle。
  *
- * 产出 lib/client.js，格式与 DSH Web 壳期望的线上格式一致：
- * window.__ModuleLoader__.load({ id, factory }) 的 CJS 工厂，平台模块
- * （react 等）经注入的 require（loader 模块表）解析，其余全部内联；
- * CSS 以文本内联（--loader:.css=text），由入口 apply() 注入 <style>。
+ * 宿主：src/host/index.js → lib/index.js（esbuild，platform=node，format=esm）。
+ *   解析依赖（mammoth/xlsx/jszip）全部内联，node: 内置模块保持外部，
+ *   产物零运行时外部依赖 —— electron-builder extraResources 不复制 node_modules，
+ *   内联后安装包/任何环境都能直接跑 Office 预览。
  *
- * esbuild 从 DSH 源码仓库解析（插件本体零运行时依赖）。
- * 本插件位于仓库根的 desktop/dsh-sidebar-shortcuts，仓库根默认为其三级上级，
- * 也可用环境变量 DSH_SOURCE 覆盖。
+ * 客户端：src/client/index.tsx → lib/client.js，格式与 DSH Web 壳期望的线上格式一致：
+ *   window.__ModuleLoader__.load({ id, factory }) 的 CJS 工厂，平台模块
+ *   （react 等）经注入的 require（loader 模块表）解析，其余全部内联；
+ *   CSS 以文本内联（--loader:.css=text），由入口 apply() 注入 <style>。
+ *
+ * esbuild 从 DSH 源码仓库解析。本插件位于仓库根的 desktop/dsh-sidebar-shortcuts，
+ * 仓库根默认为其三级上级，也可用环境变量 DSH_SOURCE 覆盖。
  */
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
@@ -58,6 +62,25 @@ function resolveEsbuild(checkout) {
 const require = createRequire(resolveEsbuild(CHECKOUT))
 const esbuild = require('esbuild')
 
+// ---- 宿主（零外部依赖产物） ----
+await esbuild.build({
+  entryPoints: [join(ROOT, 'src/host/index.js')],
+  outfile: join(ROOT, 'lib/index.js'),
+  bundle: true,
+  format: 'esm',
+  platform: 'node', // node: 内置保持外部，npm 依赖（mammoth/xlsx/jszip）全内联
+  target: 'node20',
+  charset: 'utf8',
+  // CJS 依赖（mammoth/xlsx/jszip）转 ESM 后的 require 桥接：banner 注入 createRequire，
+  // esbuild 的 __require 垫片检测到外层 require 后即可解析 node 内置模块。
+  banner: { js: [
+    '// build: 宿主 bundle（依赖内联，零外部 npm 依赖）。改动请编辑 src/host/index.js 后重新构建。',
+    "import { createRequire } from 'node:module'",
+    'const require = createRequire(import.meta.url)',
+  ].join('\n') },
+})
+
+// ---- 客户端 ----
 const banner = [
   `window.__ModuleLoader__.load({ id: ${JSON.stringify(PLUGIN_ID)}, factory: (require) => {`,
   'var module = { exports: {} }; var exports = module.exports;',
@@ -84,4 +107,4 @@ await esbuild.build({
   footer: { js: footer },
 })
 
-console.log('lib/client.js built')
+console.log('lib/index.js + lib/client.js built')

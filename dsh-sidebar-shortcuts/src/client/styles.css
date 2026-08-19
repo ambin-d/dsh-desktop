@@ -359,6 +359,33 @@
   font-size: 12px;
 }
 
+/* 已装插件操作区：全部更新工具条 + 每行更新/卸载按钮 */
+.dss-installed-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));
+}
+
+.dss-row-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dss-mini-btn-danger {
+  border-color: var(--dsw-alias-state-error-primary, #ec1313);
+  color: var(--dsw-alias-state-error-primary, #ec1313);
+}
+
+.dss-mini-btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dsw-alias-state-error-primary, #ec1313) 10%, transparent);
+}
+
 /* ---- 通用提示 ------------------------------------------------------------------- */
 .dss-muted {
   margin: 0;
@@ -729,4 +756,205 @@
   max-height: 92vh;
   object-fit: contain;
   border-radius: 4px;
+}
+
+/* ---- PDF 预览（浏览器原生渲染） --------------------------------------------------- */
+.dss-md-pdf {
+  display: block;
+  width: 100%;
+  height: calc(100% - 8px);
+  min-height: 480px;
+  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* ---- Office/WPS 文档预览 ---------------------------------------------------------- */
+.dss-office {
+  height: 100%;
+  overflow: auto;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--dsw-alias-label-primary, #1f2329);
+}
+
+/* docx：mammoth 输出的受控 HTML */
+.dss-office-doc {
+  padding: 2px 6px;
+}
+
+.dss-office-doc table,
+.dss-office-table table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  max-width: 100%;
+}
+
+.dss-office-doc th,
+.dss-office-doc td,
+.dss-office-table th,
+.dss-office-table td {
+  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.12));
+  padding: 5px 8px;
+  text-align: left;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.dss-office-doc img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+.dss-office-doc h1,
+.dss-office-doc h2,
+.dss-office-doc h3 {
+  margin: 10px 0 6px;
+}
+
+.dss-office-doc p {
+  margin: 6px 0;
+}
+
+.dss-office-doc pre {
+  background: var(--dsw-alias-bg-l2, rgba(0, 0, 0, 0.04));
+  border-radius: 6px;
+  padding: 8px;
+  overflow: auto;
+}
+
+/* xlsx：表格容器 + sheet 标签 */
+.dss-office-sheet {
+  display: flex;
+  flex-direction: column;
+}
+
+.dss-office-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 6px 2px;
+  background: var(--dsw-alias-bg-l1, #fff);
+  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.08));
+}
+
+.dss-office-tab {
+  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.14));
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #61666b);
+  border-radius: 6px;
+  padding: 3px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dss-office-tab--on {
+  background: var(--dsw-alias-brand-primary, #4d6bfe);
+  border-color: var(--dsw-alias-brand-primary, #4d6bfe);
+  color: #fff;
+}
+
+.dss-office-table {
+  padding: 8px 6px;
+  overflow: auto;
+}
+
+/* pptx：幻灯片卡片列表 */
+.dss-office-slides {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 6px;
+}
+
+.dss-office-slide {
+  display: flex;
+  gap: 12px;
+  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.1));
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--dsw-alias-bg-l1, #fff);
+}
+
+.dss-office-slide-no {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--dsw-alias-brand-primary, #4d6bfe);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dss-office-slide-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dss-office-slide-lines {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.dss-office-slide-lines li {
+  margin: 3px 0;
+}
+
+.dss-office-slide-img {
+  display: block;
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 8px;
+  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.08));
+}
+
+/* legacy：旧版 WPS 格式提示 */
+.dss-office-legacy {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 18px 6px;
+}
+
+.dss-office-legacy-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary, #1f2329);
+}
+
+/* 手机端：树/预览两栏上下堆叠，Office 预览保持可用 */
+@media (max-width: 720px) {
+  .dss-office-doc {
+    padding: 2px;
+  }
+
+  .dss-office-table {
+    padding: 6px 2px;
+  }
+
+  .dss-office-doc th,
+  .dss-office-doc td,
+  .dss-office-table th,
+  .dss-office-table td {
+    padding: 4px 5px;
+    font-size: 12px;
+  }
+
+  .dss-office-slide {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .dss-md-pdf {
+    min-height: 60vh;
+  }
 }

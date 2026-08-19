@@ -12,7 +12,7 @@
  * 样式纪律：只用官方 --dsw-alias-* 色板令牌；不设 font-family；类名前缀 dss-。
  */
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { createElement } from 'react'
 import type { Context } from 'cordis'
 import styles from './styles.css'
@@ -209,6 +209,10 @@ function MarketPanel({ onClose }: { onClose: () => void }) {
   const [installedQuery, setInstalledQuery] = useState('')
   // 每插件安装状态
   const [installStates, setInstallStates] = useState<Record<string, InstallState>>({})
+  // 已装插件操作状态（更新/卸载）+ 全部更新
+  const [updateStates, setUpdateStates] = useState<Record<string, InstallState>>({})
+  const [uninstallStates, setUninstallStates] = useState<Record<string, InstallState>>({})
+  const [updateAllState, setUpdateAllState] = useState<InstallState>({ kind: 'idle' })
   // 每插件翻译缓存 + 是否显示原文
   const [translations, setTranslations] = useState<Record<string, string>>({})
   const [showOriginal, setShowOriginal] = useState<Record<string, boolean>>({})
@@ -231,23 +235,21 @@ function MarketPanel({ onClose }: { onClose: () => void }) {
     }
   }, [])
 
+  const reloadInstalled = useCallback(async (): Promise<void> => {
+    try {
+      const res = await fetch('/sidebar-shortcuts/api/plugins')
+      const body = await res.json()
+      if (body?.ok !== true) throw new Error(body?.error ?? '读取失败')
+      setInstalled(body.plugins ?? [])
+    } catch (err) {
+      setError(err?.message ?? String(err))
+    }
+  }, [])
+
   useEffect(() => {
     if (tab !== 'installed' || installed !== null) return
-    let cancelled = false
-    fetch('/sidebar-shortcuts/api/plugins')
-      .then((res) => res.json())
-      .then((body) => {
-        if (cancelled) return
-        if (body?.ok !== true) throw new Error(body?.error ?? '读取失败')
-        setInstalled(body.plugins ?? [])
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err?.message ?? String(err))
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [tab, installed])
+    void reloadInstalled()
+  }, [tab, installed, reloadInstalled])
 
   const install = async (plugin: MarketPlugin): Promise<void> => {
     if (busyRef.current.has(plugin.name)) return
@@ -291,6 +293,88 @@ function MarketPanel({ onClose }: { onClose: () => void }) {
       setTranslations((prev) => ({ ...prev, [plugin.name]: `翻译失败：${err?.message ?? err}` }))
     } finally {
       busyRef.current.delete(`tr-${plugin.name}`)
+    }
+  }
+
+  /** 卸载单个插件（前端确认 + 同源 POST；成功后刷新列表）。 */
+  const uninstallPlugin = async (plugin: InstalledRow): Promise<void> => {
+    if (!window.confirm(`确定卸载插件「${plugin.name}」？将移除其依赖，重启宿主后完全生效。`)) return
+    if (busyRef.current.has(`un-${plugin.name}`)) return
+    busyRef.current.add(`un-${plugin.name}`)
+    setUninstallStates((prev) => ({ ...prev, [plugin.name]: { kind: 'busy' } }))
+    try {
+      const res = await fetch('/sidebar-shortcuts/api/plugins/uninstall', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: plugin.name }),
+      })
+      const body = await res.json()
+      setUninstallStates((prev) => ({
+        ...prev,
+        [plugin.name]: body?.ok === true
+          ? { kind: 'ok' }
+          : { kind: 'err', message: `卸载失败：${body?.error ?? body?.err ?? `HTTP ${res.status}`}` },
+      }))
+      if (body?.ok === true) void reloadInstalled()
+    } catch (err) {
+      setUninstallStates((prev) => ({ ...prev, [plugin.name]: { kind: 'err', message: `卸载失败：${err?.message ?? err}` } }))
+    } finally {
+      busyRef.current.delete(`un-${plugin.name}`)
+    }
+  }
+
+  /** 更新单个插件。 */
+  const updatePlugin = async (plugin: InstalledRow): Promise<void> => {
+    if (busyRef.current.has(`up-${plugin.name}`)) return
+    busyRef.current.add(`up-${plugin.name}`)
+    setUpdateStates((prev) => ({ ...prev, [plugin.name]: { kind: 'busy' } }))
+    try {
+      const res = await fetch('/sidebar-shortcuts/api/plugins/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: plugin.name }),
+      })
+      const body = await res.json()
+      setUpdateStates((prev) => ({
+        ...prev,
+        [plugin.name]: body?.ok === true
+          ? { kind: 'ok' }
+          : { kind: 'err', message: `更新失败：${body?.error ?? body?.err ?? `HTTP ${res.status}`}` },
+      }))
+      if (body?.ok === true) void reloadInstalled()
+    } catch (err) {
+      setUpdateStates((prev) => ({ ...prev, [plugin.name]: { kind: 'err', message: `更新失败：${err?.message ?? err}` } }))
+    } finally {
+      busyRef.current.delete(`up-${plugin.name}`)
+    }
+  }
+
+  /** 全部更新（非内置逐个更新，宿主汇总结果）。 */
+  const updateAll = async (): Promise<void> => {
+    const candidates = (installed ?? []).filter((plugin) => !plugin.builtin)
+    if (candidates.length === 0) {
+      setUpdateAllState({ kind: 'err', message: '没有可更新的自装插件（内置插件由桌面客户端统一管理）' })
+      return
+    }
+    if (!window.confirm(`将逐个更新 ${candidates.length} 个自装插件（可能耗时数分钟），确定？`)) return
+    if (updateAllState.kind === 'busy') return
+    setUpdateAllState({ kind: 'busy' })
+    try {
+      const res = await fetch('/sidebar-shortcuts/api/plugins/update-all', { method: 'POST' })
+      const body = await res.json()
+      const failed = Array.isArray(body?.failed) ? body.failed : []
+      const succeeded = Number(body?.succeeded ?? 0)
+      const total = Number(body?.total ?? candidates.length)
+      if (failed.length > 0) {
+        setUpdateAllState({ kind: 'err', message: `全部更新完成 ${succeeded}/${total}，失败：${failed.join('、')}` })
+      } else if (body?.ok === true) {
+        setUpdateAllState({ kind: 'ok' })
+      } else {
+        setUpdateAllState({ kind: 'err', message: `全部更新未通过：${body?.error ?? '未知错误'}` })
+      }
+      void reloadInstalled()
+    } catch (err) {
+      setUpdateAllState({ kind: 'err', message: `全部更新失败：${err?.message ?? err}` })
     }
   }
 
@@ -410,15 +494,47 @@ function MarketPanel({ onClose }: { onClose: () => void }) {
           )}
           {tab === 'installed' && installed !== null && (
             <div className="dss-list">
-              {installedFiltered.map((plugin) => (
-                <div key={plugin.name} className="dss-row">
-                  <div className="dss-row-name">
-                    {plugin.name}
-                    {plugin.builtin ? <span className="dss-tag">内置</span> : null}
+              <div className="dss-installed-tools">
+                <button
+                  type="button"
+                  className="dss-mini-btn dss-mini-btn-primary"
+                  onClick={() => void updateAll()}
+                  disabled={updateAllState.kind === 'busy'}
+                >
+                  {updateAllState.kind === 'busy' ? '全部更新中…（逐个进行，可能较久）' : '全部更新（内置跳过）'}
+                </button>
+                {updateAllState.kind === 'ok' ? <span className="dss-hint-ok">全部更新完成，重启宿主生效</span> : null}
+                {updateAllState.kind === 'err' ? <span className="dss-hint-err">{updateAllState.message}</span> : null}
+              </div>
+              {installedFiltered.map((plugin) => {
+                const updateState = updateStates[plugin.name] ?? { kind: 'idle' as const }
+                const uninstallState = uninstallStates[plugin.name] ?? { kind: 'idle' as const }
+                return (
+                  <div key={plugin.name} className="dss-row">
+                    <div className="dss-row-name">
+                      {plugin.name}
+                      {plugin.builtin ? <span className="dss-tag">内置</span> : null}
+                    </div>
+                    <div className="dss-row-side">{plugin.version ? `v${plugin.version}` : ''}</div>
+                    <div className="dss-row-actions">
+                      {!plugin.builtin && (
+                        <>
+                          <button type="button" className="dss-mini-btn" onClick={() => void updatePlugin(plugin)} disabled={updateState.kind === 'busy'}>
+                            {updateState.kind === 'busy' ? '更新中…' : '更新'}
+                          </button>
+                          <button type="button" className="dss-mini-btn dss-mini-btn-danger" onClick={() => void uninstallPlugin(plugin)} disabled={uninstallState.kind === 'busy'}>
+                            {uninstallState.kind === 'busy' ? '卸载中…' : '卸载'}
+                          </button>
+                        </>
+                      )}
+                      {updateState.kind === 'ok' ? <span className="dss-hint-ok">已是最新或已更新，重启宿主生效</span> : null}
+                      {updateState.kind === 'err' ? <span className="dss-hint-err">{updateState.message}</span> : null}
+                      {uninstallState.kind === 'ok' ? <span className="dss-hint-ok">已卸载，重启宿主生效</span> : null}
+                      {uninstallState.kind === 'err' ? <span className="dss-hint-err">{uninstallState.message}</span> : null}
+                    </div>
                   </div>
-                  <div className="dss-row-side">{plugin.version ? `v${plugin.version}` : ''}</div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -461,10 +577,11 @@ type DirState = { status: 'loading' } | { status: 'ready'; data: TreeData } | { 
 // ---- 媒体嵌入（![[wiki]] → 图片/视频/音频） --------------------------------
 
 /** 按扩展名判断媒体类型。 */
-function mediaKind(target: string): 'image' | 'video' | 'audio' | 'other' {
+function mediaKind(target: string): 'image' | 'video' | 'audio' | 'pdf' | 'other' {
   if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(target)) return 'image'
   if (/\.(mp4|mov|webm|m4v)$/i.test(target)) return 'video'
   if (/\.(mp3|m4a|wav|ogg)$/i.test(target)) return 'audio'
+  if (/\.pdf$/i.test(target)) return 'pdf'
   return 'other'
 }
 
@@ -560,7 +677,96 @@ function MediaDirect({ rel }: { rel: string }) {
   if (kind === 'audio') {
     return <audio className="dss-md-audio" src={src} controls preload="metadata" />
   }
+  if (kind === 'pdf') {
+    return <iframe className="dss-md-pdf" src={src} title={rel} />
+  }
   return <p className="dss-muted">该文件类型暂不支持预览</p>
+}
+
+// ---- Office/WPS 文档预览（docx/xlsx/pptx 解析 + 旧格式提示） ----------------
+
+type OfficeData =
+  | { kind: 'doc'; html: string }
+  | { kind: 'sheet'; sheets: { name: string; html: string }[] }
+  | { kind: 'slides'; slides: OfficeSlide[] }
+  | { kind: 'legacy'; ext: string; hint: string }
+
+type OfficeSlideImage = { dataUri: string } | { skipped: true; bytes: number }
+
+type OfficeSlide = { no: number; lines: string[]; images: OfficeSlideImage[] }
+
+/** Office 文档预览：docx 排版 / xlsx 表格（多 sheet 标签）/ pptx 幻灯片卡片 / 旧格式提示。 */
+function OfficePreview({ rel, data, onOpenExternally }: {
+  rel: string
+  data: OfficeData
+  onOpenExternally: (rel: string) => void
+}) {
+  if (data.kind === 'doc') {
+    return <div className="dss-office dss-office-doc" dangerouslySetInnerHTML={{ __html: data.html }} />
+  }
+  if (data.kind === 'sheet') {
+    return <SheetPreview sheets={data.sheets} />
+  }
+  if (data.kind === 'slides') {
+    return (
+      <div className="dss-office dss-office-slides">
+        {data.slides.length === 0
+          ? <p className="dss-muted">未能解析出幻灯片内容</p>
+          : data.slides.map((slide) => (
+              <div key={slide.no} className="dss-office-slide">
+                <div className="dss-office-slide-no">{slide.no}</div>
+                <div className="dss-office-slide-body">
+                  {slide.lines.length > 0 ? (
+                    <ul className="dss-office-slide-lines">
+                      {slide.lines.map((line, index) => <li key={index}>{line}</li>)}
+                    </ul>
+                  ) : (
+                    <p className="dss-muted">（本页无可提取文本）</p>
+                  )}
+                  {slide.images.map((image, index) => (
+                    'dataUri' in image
+                      ? <img key={index} className="dss-office-slide-img" src={image.dataUri} alt="" loading="lazy" />
+                      : <p key={index} className="dss-muted">（内嵌图片过大已省略：{(image.bytes / 1024 / 1024).toFixed(1)}MB）</p>
+                  ))}
+                </div>
+              </div>
+            ))}
+      </div>
+    )
+  }
+  return (
+    <div className="dss-office dss-office-legacy">
+      <p className="dss-office-legacy-title">无法内嵌预览（{data.ext}）</p>
+      <p>{data.hint}</p>
+      <button type="button" className="dss-mini-btn" onClick={() => onOpenExternally(rel)}>用默认程序打开</button>
+    </div>
+  )
+}
+
+/** xlsx 多 sheet 标签切换。 */
+function SheetPreview({ sheets }: { sheets: { name: string; html: string }[] }) {
+  const [tab, setTab] = useState(0)
+  const index = Math.min(tab, sheets.length - 1)
+  const sheet = sheets[index]
+  return (
+    <div className="dss-office dss-office-sheet">
+      {sheets.length > 1 ? (
+        <div className="dss-office-tabs">
+          {sheets.map((item, i) => (
+            <button
+              key={item.name}
+              type="button"
+              className={i === index ? 'dss-office-tab dss-office-tab--on' : 'dss-office-tab'}
+              onClick={() => setTab(i)}
+            >
+              {item.name}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {sheet ? <div className="dss-office-table" dangerouslySetInnerHTML={{ __html: sheet.html }} /> : null}
+    </div>
+  )
 }
 
 /** Markdown 行内渲染：`code` / **粗** / *斜* / [链接] / [[wiki]] / ![[媒体]]。 */
@@ -783,7 +989,9 @@ function TreeView({ rel, dirs, expanded, selected, filter, onToggle, onSelect }:
   for (const file of dirState.data.files) {
     if (!matchName(file.name)) continue
     const fileRel = rel ? `${rel}/${file.name}` : file.name
-    const icon = file.kind === 'image' ? '🖼️' : file.kind === 'video' ? '🎬' : file.kind === 'audio' ? '🎵' : '📄'
+    const icon = file.kind === 'image' ? '🖼️' : file.kind === 'video' ? '🎬' : file.kind === 'audio' ? '🎵'
+      : file.kind === 'pdf' ? '📕' : file.kind === 'doc' ? '📝' : file.kind === 'sheet' ? '📊'
+        : file.kind === 'slides' ? '📽️' : file.kind === 'legacy' ? '🗎' : '📄'
     nodes.push(
       <button
         key={`f-${fileRel}`}
@@ -812,6 +1020,7 @@ function KnowledgePanel({ onClose }: { onClose: () => void }) {
   const [selected, setSelected] = useState<string | null>(null)
   const [content, setContent] = useState<{ rel: string; text: string } | null>(null)
   const [mediaRel, setMediaRel] = useState<string | null>(null) // 通道 B：直接预览的媒体路径
+  const [office, setOffice] = useState<OfficeData | null>(null) // 通道 C：Office/WPS 文档预览数据
   const [loadingFile, setLoadingFile] = useState(false)
   const [filter, setFilter] = useState('')
 
@@ -867,14 +1076,38 @@ function KnowledgePanel({ onClose }: { onClose: () => void }) {
   const openFile = async (rel: string, kind: string): Promise<void> => {
     setSelected(rel)
     setError('')
-    // 通道 B：媒体文件直接预览（精确路径走 media 字节流，Range 已支持可拖进度条）
-    if (kind !== 'md') {
+    // 通道 B：媒体/PDF 直接预览（精确路径走 media 字节流，Range 已支持可拖进度条）
+    if (kind === 'image' || kind === 'video' || kind === 'audio' || kind === 'pdf') {
       setContent(null)
+      setOffice(null)
       setMediaRel(rel)
       setLoadingFile(false)
       return
     }
+    // 通道 C：Office/WPS 文档（宿主解析后返回可渲染结构）
+    if (kind === 'doc' || kind === 'sheet' || kind === 'slides' || kind === 'legacy') {
+      setMediaRel(null)
+      setContent(null)
+      setOffice(null)
+      setLoadingFile(true)
+      try {
+        const res = await fetch(`/sidebar-shortcuts/api/vault/office?path=${encodeURIComponent(rel)}`)
+        const body = await res.json()
+        if (body?.ok !== true) throw new Error(body?.error ?? `HTTP ${res.status}`)
+        const officeKind = String(body.kind ?? '')
+        if (officeKind === 'doc') setOffice({ kind: 'doc', html: String(body.html ?? '') })
+        else if (officeKind === 'sheet') setOffice({ kind: 'sheet', sheets: Array.isArray(body.sheets) ? body.sheets : [] })
+        else if (officeKind === 'slides') setOffice({ kind: 'slides', slides: Array.isArray(body.slides) ? body.slides : [] })
+        else setOffice({ kind: 'legacy', ext: String(body.ext ?? ''), hint: String(body.hint ?? '') })
+      } catch (err) {
+        setError(`预览失败：${err?.message ?? err}`)
+      } finally {
+        setLoadingFile(false)
+      }
+      return
+    }
     setMediaRel(null)
+    setOffice(null)
     setLoadingFile(true)
     try {
       const res = await fetch(`/sidebar-shortcuts/api/vault/read?path=${encodeURIComponent(rel)}`)
@@ -886,6 +1119,19 @@ function KnowledgePanel({ onClose }: { onClose: () => void }) {
       setError(`读取失败：${err?.message ?? err}`)
     } finally {
       setLoadingFile(false)
+    }
+  }
+
+  /** 用系统默认程序打开库内单个文件（旧版 WPS 格式兜底）。 */
+  const openFileExternally = async (rel: string): Promise<void> => {
+    setOpenHint('')
+    try {
+      const res = await fetch(`/sidebar-shortcuts/api/vault/open-file?path=${encodeURIComponent(rel)}`, { method: 'POST' })
+      const body = await res.json()
+      if (body?.ok !== true) throw new Error(body?.error ?? `HTTP ${res.status}`)
+      setOpenHint('已用默认程序打开')
+    } catch (err) {
+      setOpenHint(`打开失败：${err?.message ?? err}`)
     }
   }
 
@@ -959,9 +1205,11 @@ function KnowledgePanel({ onClose }: { onClose: () => void }) {
                 ? <p className="dss-muted">{error}</p>
                 : mediaRel !== null
                   ? <MediaDirect rel={mediaRel} />
-                  : content === null
-                    ? <p className="dss-muted">从左侧目录树点选笔记（📄）阅读，或点视频（🎬）/音频（🎵）/图片（🖼️）直接预览（只读，不会改动你的文件）</p>
-                    : <div className="dss-md">{renderMarkdown(content.text, content.rel)}</div>}
+                  : office !== null
+                    ? <OfficePreview rel={selected ?? ''} data={office} onOpenExternally={(path) => void openFileExternally(path)} />
+                    : content === null
+                      ? <p className="dss-muted">从左侧目录树点选笔记（📄）阅读，或直接预览图片（🖼️）/视频（🎬）/音频（🎵）/PDF（📕）/Word（📝）/表格（📊）/幻灯片（📽️）（只读，不会改动你的文件）</p>
+                      : <div className="dss-md">{renderMarkdown(content.text, content.rel)}</div>}
           </div>
         </div>
       </div>

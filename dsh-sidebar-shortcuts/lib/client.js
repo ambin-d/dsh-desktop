@@ -30,7 +30,7 @@ var import_react = require("react");
 var import_react2 = require("react");
 
 // src/client/styles.css
-var styles_default = "/**\n * dsh-sidebar-shortcuts 样式。\n * 纪律：只用官方 --dsw-alias-* 令牌；不设 font-family；类名前缀 dss-。\n */\n\n/* ---- 侧栏左下角入口按钮（与官方设置入口同排） ----------------------------- */\n.dss-foot-btn {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  width: 100%;\n  padding: 6px 8px;\n  border: none;\n  border-radius: 8px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 13px;\n  line-height: 1;\n  cursor: pointer;\n  transition: background 0.12s ease, color 0.12s ease;\n}\n\n.dss-foot-btn:hover {\n  background: rgba(128, 128, 128, 0.1);\n  color: var(--dsw-alias-label-primary, #0f1115);\n}\n\n.dss-foot-btn svg {\n  flex: none;\n  display: block;\n}\n\n.dss-foot-label {\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n\n/* ---- 居中面板（shell.overlay 帧级浮层） ------------------------------------ */\n.dss-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 1000;\n  background: rgba(14, 20, 34, 0.45);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 24px;\n}\n\n.dss-modal {\n  width: 560px;\n  max-width: 100%;\n  max-height: 72vh;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-layer-1, #ffffff));\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  border-radius: 12px;\n  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);\n  color: var(--dsw-alias-label-primary, #0f1115);\n}\n\n/* 内嵌大面板：宽 1140px、高 84vh */\n.dss-modal--wide {\n  width: 1140px;\n  max-height: 84vh;\n  height: 84vh;\n}\n\n.dss-modal-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 16px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-modal-title {\n  font-size: 15px;\n  font-weight: 600;\n}\n\n.dss-modal-close {\n  width: 28px;\n  height: 28px;\n  border: none;\n  border-radius: 8px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 18px;\n  line-height: 1;\n  cursor: pointer;\n}\n\n.dss-modal-close:hover {\n  background: rgba(128, 128, 128, 0.12);\n  color: var(--dsw-alias-label-primary, #0f1115);\n}\n\n.dss-modal-foot {\n  padding: 10px 16px;\n  border-top: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 12px;\n}\n\n/* ---- 面板骨架 -------------------------------------------------------------- */\n.dss-panel {\n  flex: 1;\n  min-height: 0;\n  display: flex;\n  flex-direction: column;\n}\n\n.dss-panel-toolbar {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 16px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-tabs {\n  display: flex;\n  gap: 4px;\n}\n\n.dss-tab {\n  padding: 6px 14px;\n  border: none;\n  border-radius: 999px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 13px;\n  font-family: inherit;\n  cursor: pointer;\n}\n\n.dss-tab--active {\n  background: rgba(77, 107, 254, 0.12);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n.dss-panel-search {\n  flex: 1;\n  min-width: 120px;\n}\n\n.dss-panel-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  padding: 12px 16px;\n}\n\n/* ---- 搜索框 ----------------------------------------------------------------- */\n.dss-search {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 7px 12px;\n  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));\n  border-radius: 999px;\n  background: transparent;\n  color: var(--dsw-alias-label-primary, #0f1115);\n  font-size: 13px;\n  outline: none;\n}\n\n.dss-search:focus {\n  border-color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n/* ---- 分类筛选 ---------------------------------------------------------------- */\n.dss-cats {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  padding: 8px 16px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-cat {\n  padding: 3px 10px;\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  border-radius: 999px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 12px;\n  font-family: inherit;\n  cursor: pointer;\n}\n\n.dss-cat--active {\n  border-color: transparent;\n  background: rgba(77, 107, 254, 0.12);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n/* ---- 市场列表 ----------------------------------------------------------------- */\n.dss-mp-list {\n  display: flex;\n  flex-direction: column;\n}\n\n.dss-mp-row {\n  padding: 10px 4px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n\n.dss-mp-row-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n}\n\n.dss-mp-name {\n  font-size: 14px;\n  font-weight: 600;\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n  text-decoration: none;\n  word-break: break-all;\n}\n\n.dss-mp-name:hover {\n  text-decoration: underline;\n}\n\n.dss-mp-meta {\n  flex: none;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-mp-activity {\n  white-space: nowrap;\n}\n\n.dss-mp-stars {\n  white-space: nowrap;\n}\n\n.dss-mp-desc {\n  font-size: 13px;\n  line-height: 1.5;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  word-break: break-word;\n}\n\n.dss-mp-actions {\n  display: flex;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n\n.dss-mp-stats {\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  white-space: nowrap;\n}\n\n/* ---- 标签 / 小按钮 ------------------------------------------------------------- */\n.dss-tag {\n  flex: none;\n  padding: 1px 7px;\n  border-radius: 999px;\n  background: rgba(77, 107, 254, 0.12);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n  font-size: 11px;\n}\n\n.dss-tag-lang {\n  background: rgba(34, 197, 94, 0.12);\n  color: var(--dsw-alias-state-success-primary, #22c55e);\n}\n\n.dss-mini-btn {\n  padding: 3px 12px;\n  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));\n  border-radius: 999px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 12px;\n  font-family: inherit;\n  cursor: pointer;\n}\n\n.dss-mini-btn:hover:not(:disabled) {\n  border-color: var(--dsw-alias-brand-primary, #4d6bfe);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n.dss-mini-btn-primary {\n  border-color: transparent;\n  background: var(--dsw-alias-brand-primary, #4d6bfe);\n  color: #ffffff;\n}\n\n.dss-mini-btn-primary:hover:not(:disabled) {\n  filter: brightness(1.08);\n  color: #ffffff;\n}\n\n.dss-mini-btn:disabled {\n  opacity: 0.5;\n  cursor: default;\n}\n\n.dss-load-more {\n  align-self: center;\n  margin: 12px 0;\n}\n\n/* ---- 已装插件列表（复用行样式） ------------------------------------------------ */\n.dss-list {\n  display: flex;\n  flex-direction: column;\n}\n\n.dss-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 4px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-row:last-child {\n  border-bottom: none;\n}\n\n.dss-row-name {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 13px;\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.dss-row-side {\n  flex: none;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 12px;\n}\n\n/* ---- 通用提示 ------------------------------------------------------------------- */\n.dss-muted {\n  margin: 0;\n  font-size: 13px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-hint-ok {\n  margin: 0;\n  font-size: 12px;\n  color: var(--dsw-alias-state-success-primary, #22c55e);\n  word-break: break-all;\n}\n\n.dss-hint-err {\n  margin: 0;\n  font-size: 12px;\n  color: var(--dsw-alias-state-error-primary, #ec1313);\n  word-break: break-all;\n}\n\n.dss-text-link {\n  background: none;\n  border: none;\n  padding: 0;\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n  font-size: inherit;\n  font-family: inherit;\n  text-decoration: none;\n  cursor: pointer;\n}\n\n.dss-text-link:hover {\n  text-decoration: underline;\n}\n\n.dss-text-link-btn {\n  margin-left: 10px;\n}\n\n/* ---- 知识库：双栏布局 -------------------------------------------------------------- */\n.dss-panel--kb {\n  flex-direction: row;\n  min-height: 0;\n}\n\n.dss-kb-tree {\n  width: 300px;\n  flex: none;\n  display: flex;\n  flex-direction: column;\n  border-right: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  min-height: 0;\n}\n\n.dss-kb-tree-head {\n  padding: 10px 12px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-kb-tree-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  padding: 6px;\n}\n\n.dss-tree-item {\n  display: flex;\n  flex-direction: column;\n}\n\n.dss-tree-children {\n  padding-left: 14px;\n}\n\n.dss-tree-row {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  width: 100%;\n  padding: 3px 6px;\n  border: none;\n  border-radius: 6px;\n  background: transparent;\n  color: var(--dsw-alias-label-primary, #0f1115);\n  font-size: 13px;\n  font-family: inherit;\n  text-align: left;\n  cursor: pointer;\n}\n\n.dss-tree-row:hover {\n  background: rgba(128, 128, 128, 0.08);\n}\n\n.dss-tree-row--file {\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-tree-row--selected {\n  background: rgba(77, 107, 254, 0.12);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n.dss-tree-caret {\n  flex: none;\n  width: 14px;\n  font-size: 10px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-tree-icon {\n  flex: none;\n  font-size: 12px;\n}\n\n.dss-tree-label {\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.dss-tree-loading,\n.dss-tree-error {\n  padding: 4px 8px;\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-tree-error {\n  color: var(--dsw-alias-state-error-primary, #ec1313);\n}\n\n.dss-kb-preview {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  min-height: 0;\n}\n\n.dss-kb-preview-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 16px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-kb-file-name {\n  font-size: 13px;\n  font-weight: 600;\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.dss-kb-path {\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.dss-kb-corner {\n  flex: none;\n  display: flex;\n  align-items: center;\n  font-size: 12px;\n}\n\n.dss-kb-preview-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  padding: 14px 20px;\n}\n\n/* ---- Markdown 预览 ----------------------------------------------------------------- */\n.dss-md {\n  font-size: 14px;\n  line-height: 1.65;\n  word-break: break-word;\n}\n\n.dss-md-h {\n  margin: 0.9em 0 0.45em;\n  line-height: 1.3;\n}\n\n.dss-md-h1 { font-size: 22px; }\n.dss-md-h2 { font-size: 18px; }\n.dss-md-h3 { font-size: 16px; }\n.dss-md-h4 { font-size: 15px; }\n.dss-md-h5 { font-size: 14px; }\n.dss-md-h6 { font-size: 13px; }\n\n.dss-md-p {\n  margin: 0.4em 0;\n}\n\n.dss-md-list {\n  margin: 0.4em 0;\n  padding-left: 1.6em;\n}\n\n.dss-md-quote {\n  margin: 0.4em 0;\n  padding: 2px 12px;\n  border-left: 3px solid var(--dsw-alias-brand-primary, #4d6bfe);\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-md-code {\n  padding: 1px 6px;\n  border-radius: 4px;\n  background: rgba(128, 128, 128, 0.14);\n  font-size: 0.9em;\n}\n\n.dss-md-pre {\n  margin: 0.5em 0;\n  padding: 10px 12px;\n  border-radius: 8px;\n  background: rgba(128, 128, 128, 0.1);\n  overflow-x: auto;\n  font-size: 13px;\n  line-height: 1.5;\n}\n\n.dss-md-pre code {\n  background: none;\n  padding: 0;\n  font-family: Consolas, 'Courier New', monospace;\n}\n\n.dss-md-table {\n  margin: 0.5em 0;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n\n.dss-md-table th,\n.dss-md-table td {\n  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));\n  padding: 4px 10px;\n  text-align: left;\n}\n\n.dss-md-table th {\n  background: rgba(128, 128, 128, 0.08);\n}\n\n.dss-md-hr {\n  border: none;\n  border-top: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));\n  margin: 0.8em 0;\n}\n\n.dss-md-wiki {\n  padding: 0 4px;\n  border-radius: 4px;\n  background: rgba(77, 107, 254, 0.1);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n/* ---- 设置页「关于」 ------------------------------------------------------------ */\n.dss-about {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n  padding: 4px 2px;\n}\n\n.dss-about-title {\n  margin: 0;\n  font-size: 17px;\n  font-weight: 600;\n}\n\n.dss-about-list {\n  display: flex;\n  flex-direction: column;\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  border-radius: 10px;\n  overflow: hidden;\n}\n\n.dss-about-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 10px 14px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  font-size: 13px;\n}\n\n.dss-about-row:last-child {\n  border-bottom: none;\n}\n\n.dss-about-key {\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-about-value {\n  font-weight: 500;\n  text-align: right;\n  word-break: break-all;\n}\n\n/* ---- 媒体嵌入（![[wiki]] → 图片/视频/音频） ------------------------------------- */\n.dss-md-embed {\n  margin: 8px 0;\n}\n\n.dss-md-img {\n  display: block;\n  max-width: 100%;\n  max-height: 560px;\n  object-fit: contain;\n  border-radius: 8px;\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  cursor: zoom-in;\n  margin: 6px 0;\n}\n\n.dss-md-video {\n  display: block;\n  max-width: 100%;\n  border-radius: 8px;\n  margin: 6px 0;\n  background: #000;\n}\n\n.dss-md-audio {\n  display: block;\n  max-width: 100%;\n  margin: 6px 0;\n}\n\n.dss-md-media-note {\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n/* 点击放大原图：全屏浮层 */\n.dss-zoom {\n  position: fixed;\n  inset: 0;\n  z-index: 1300;\n  background: rgba(0, 0, 0, 0.78);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: zoom-out;\n}\n\n.dss-zoom img {\n  max-width: 92vw;\n  max-height: 92vh;\n  object-fit: contain;\n  border-radius: 4px;\n}\n";
+var styles_default = "/**\n * dsh-sidebar-shortcuts 样式。\n * 纪律：只用官方 --dsw-alias-* 令牌；不设 font-family；类名前缀 dss-。\n */\n\n/* ---- 侧栏左下角入口按钮（与官方设置入口同排） ----------------------------- */\n.dss-foot-btn {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  width: 100%;\n  padding: 6px 8px;\n  border: none;\n  border-radius: 8px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 13px;\n  line-height: 1;\n  cursor: pointer;\n  transition: background 0.12s ease, color 0.12s ease;\n}\n\n.dss-foot-btn:hover {\n  background: rgba(128, 128, 128, 0.1);\n  color: var(--dsw-alias-label-primary, #0f1115);\n}\n\n.dss-foot-btn svg {\n  flex: none;\n  display: block;\n}\n\n.dss-foot-label {\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n\n/* ---- 居中面板（shell.overlay 帧级浮层） ------------------------------------ */\n.dss-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 1000;\n  background: rgba(14, 20, 34, 0.45);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 24px;\n}\n\n.dss-modal {\n  width: 560px;\n  max-width: 100%;\n  max-height: 72vh;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  background: var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-layer-1, #ffffff));\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  border-radius: 12px;\n  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);\n  color: var(--dsw-alias-label-primary, #0f1115);\n}\n\n/* 内嵌大面板：宽 1140px、高 84vh */\n.dss-modal--wide {\n  width: 1140px;\n  max-height: 84vh;\n  height: 84vh;\n}\n\n.dss-modal-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 16px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-modal-title {\n  font-size: 15px;\n  font-weight: 600;\n}\n\n.dss-modal-close {\n  width: 28px;\n  height: 28px;\n  border: none;\n  border-radius: 8px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 18px;\n  line-height: 1;\n  cursor: pointer;\n}\n\n.dss-modal-close:hover {\n  background: rgba(128, 128, 128, 0.12);\n  color: var(--dsw-alias-label-primary, #0f1115);\n}\n\n.dss-modal-foot {\n  padding: 10px 16px;\n  border-top: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 12px;\n}\n\n/* ---- 面板骨架 -------------------------------------------------------------- */\n.dss-panel {\n  flex: 1;\n  min-height: 0;\n  display: flex;\n  flex-direction: column;\n}\n\n.dss-panel-toolbar {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 16px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-tabs {\n  display: flex;\n  gap: 4px;\n}\n\n.dss-tab {\n  padding: 6px 14px;\n  border: none;\n  border-radius: 999px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 13px;\n  font-family: inherit;\n  cursor: pointer;\n}\n\n.dss-tab--active {\n  background: rgba(77, 107, 254, 0.12);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n.dss-panel-search {\n  flex: 1;\n  min-width: 120px;\n}\n\n.dss-panel-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  padding: 12px 16px;\n}\n\n/* ---- 搜索框 ----------------------------------------------------------------- */\n.dss-search {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 7px 12px;\n  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));\n  border-radius: 999px;\n  background: transparent;\n  color: var(--dsw-alias-label-primary, #0f1115);\n  font-size: 13px;\n  outline: none;\n}\n\n.dss-search:focus {\n  border-color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n/* ---- 分类筛选 ---------------------------------------------------------------- */\n.dss-cats {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  padding: 8px 16px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-cat {\n  padding: 3px 10px;\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  border-radius: 999px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 12px;\n  font-family: inherit;\n  cursor: pointer;\n}\n\n.dss-cat--active {\n  border-color: transparent;\n  background: rgba(77, 107, 254, 0.12);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n/* ---- 市场列表 ----------------------------------------------------------------- */\n.dss-mp-list {\n  display: flex;\n  flex-direction: column;\n}\n\n.dss-mp-row {\n  padding: 10px 4px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n\n.dss-mp-row-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n}\n\n.dss-mp-name {\n  font-size: 14px;\n  font-weight: 600;\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n  text-decoration: none;\n  word-break: break-all;\n}\n\n.dss-mp-name:hover {\n  text-decoration: underline;\n}\n\n.dss-mp-meta {\n  flex: none;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-mp-activity {\n  white-space: nowrap;\n}\n\n.dss-mp-stars {\n  white-space: nowrap;\n}\n\n.dss-mp-desc {\n  font-size: 13px;\n  line-height: 1.5;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  word-break: break-word;\n}\n\n.dss-mp-actions {\n  display: flex;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n\n.dss-mp-stats {\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  white-space: nowrap;\n}\n\n/* ---- 标签 / 小按钮 ------------------------------------------------------------- */\n.dss-tag {\n  flex: none;\n  padding: 1px 7px;\n  border-radius: 999px;\n  background: rgba(77, 107, 254, 0.12);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n  font-size: 11px;\n}\n\n.dss-tag-lang {\n  background: rgba(34, 197, 94, 0.12);\n  color: var(--dsw-alias-state-success-primary, #22c55e);\n}\n\n.dss-mini-btn {\n  padding: 3px 12px;\n  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));\n  border-radius: 999px;\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 12px;\n  font-family: inherit;\n  cursor: pointer;\n}\n\n.dss-mini-btn:hover:not(:disabled) {\n  border-color: var(--dsw-alias-brand-primary, #4d6bfe);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n.dss-mini-btn-primary {\n  border-color: transparent;\n  background: var(--dsw-alias-brand-primary, #4d6bfe);\n  color: #ffffff;\n}\n\n.dss-mini-btn-primary:hover:not(:disabled) {\n  filter: brightness(1.08);\n  color: #ffffff;\n}\n\n.dss-mini-btn:disabled {\n  opacity: 0.5;\n  cursor: default;\n}\n\n.dss-load-more {\n  align-self: center;\n  margin: 12px 0;\n}\n\n/* ---- 已装插件列表（复用行样式） ------------------------------------------------ */\n.dss-list {\n  display: flex;\n  flex-direction: column;\n}\n\n.dss-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 4px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-row:last-child {\n  border-bottom: none;\n}\n\n.dss-row-name {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 13px;\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.dss-row-side {\n  flex: none;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  font-size: 12px;\n}\n\n/* 已装插件操作区：全部更新工具条 + 每行更新/卸载按钮 */\n.dss-installed-tools {\n  display: flex;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 8px;\n  padding: 8px 4px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-row-actions {\n  flex: none;\n  display: flex;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 6px;\n}\n\n.dss-mini-btn-danger {\n  border-color: var(--dsw-alias-state-error-primary, #ec1313);\n  color: var(--dsw-alias-state-error-primary, #ec1313);\n}\n\n.dss-mini-btn-danger:hover:not(:disabled) {\n  background: color-mix(in srgb, var(--dsw-alias-state-error-primary, #ec1313) 10%, transparent);\n}\n\n/* ---- 通用提示 ------------------------------------------------------------------- */\n.dss-muted {\n  margin: 0;\n  font-size: 13px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-hint-ok {\n  margin: 0;\n  font-size: 12px;\n  color: var(--dsw-alias-state-success-primary, #22c55e);\n  word-break: break-all;\n}\n\n.dss-hint-err {\n  margin: 0;\n  font-size: 12px;\n  color: var(--dsw-alias-state-error-primary, #ec1313);\n  word-break: break-all;\n}\n\n.dss-text-link {\n  background: none;\n  border: none;\n  padding: 0;\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n  font-size: inherit;\n  font-family: inherit;\n  text-decoration: none;\n  cursor: pointer;\n}\n\n.dss-text-link:hover {\n  text-decoration: underline;\n}\n\n.dss-text-link-btn {\n  margin-left: 10px;\n}\n\n/* ---- 知识库：双栏布局 -------------------------------------------------------------- */\n.dss-panel--kb {\n  flex-direction: row;\n  min-height: 0;\n}\n\n.dss-kb-tree {\n  width: 300px;\n  flex: none;\n  display: flex;\n  flex-direction: column;\n  border-right: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  min-height: 0;\n}\n\n.dss-kb-tree-head {\n  padding: 10px 12px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-kb-tree-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  padding: 6px;\n}\n\n.dss-tree-item {\n  display: flex;\n  flex-direction: column;\n}\n\n.dss-tree-children {\n  padding-left: 14px;\n}\n\n.dss-tree-row {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  width: 100%;\n  padding: 3px 6px;\n  border: none;\n  border-radius: 6px;\n  background: transparent;\n  color: var(--dsw-alias-label-primary, #0f1115);\n  font-size: 13px;\n  font-family: inherit;\n  text-align: left;\n  cursor: pointer;\n}\n\n.dss-tree-row:hover {\n  background: rgba(128, 128, 128, 0.08);\n}\n\n.dss-tree-row--file {\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-tree-row--selected {\n  background: rgba(77, 107, 254, 0.12);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n.dss-tree-caret {\n  flex: none;\n  width: 14px;\n  font-size: 10px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-tree-icon {\n  flex: none;\n  font-size: 12px;\n}\n\n.dss-tree-label {\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.dss-tree-loading,\n.dss-tree-error {\n  padding: 4px 8px;\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-tree-error {\n  color: var(--dsw-alias-state-error-primary, #ec1313);\n}\n\n.dss-kb-preview {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  min-height: 0;\n}\n\n.dss-kb-preview-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 16px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n}\n\n.dss-kb-file-name {\n  font-size: 13px;\n  font-weight: 600;\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.dss-kb-path {\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.dss-kb-corner {\n  flex: none;\n  display: flex;\n  align-items: center;\n  font-size: 12px;\n}\n\n.dss-kb-preview-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  padding: 14px 20px;\n}\n\n/* ---- Markdown 预览 ----------------------------------------------------------------- */\n.dss-md {\n  font-size: 14px;\n  line-height: 1.65;\n  word-break: break-word;\n}\n\n.dss-md-h {\n  margin: 0.9em 0 0.45em;\n  line-height: 1.3;\n}\n\n.dss-md-h1 { font-size: 22px; }\n.dss-md-h2 { font-size: 18px; }\n.dss-md-h3 { font-size: 16px; }\n.dss-md-h4 { font-size: 15px; }\n.dss-md-h5 { font-size: 14px; }\n.dss-md-h6 { font-size: 13px; }\n\n.dss-md-p {\n  margin: 0.4em 0;\n}\n\n.dss-md-list {\n  margin: 0.4em 0;\n  padding-left: 1.6em;\n}\n\n.dss-md-quote {\n  margin: 0.4em 0;\n  padding: 2px 12px;\n  border-left: 3px solid var(--dsw-alias-brand-primary, #4d6bfe);\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-md-code {\n  padding: 1px 6px;\n  border-radius: 4px;\n  background: rgba(128, 128, 128, 0.14);\n  font-size: 0.9em;\n}\n\n.dss-md-pre {\n  margin: 0.5em 0;\n  padding: 10px 12px;\n  border-radius: 8px;\n  background: rgba(128, 128, 128, 0.1);\n  overflow-x: auto;\n  font-size: 13px;\n  line-height: 1.5;\n}\n\n.dss-md-pre code {\n  background: none;\n  padding: 0;\n  font-family: Consolas, 'Courier New', monospace;\n}\n\n.dss-md-table {\n  margin: 0.5em 0;\n  border-collapse: collapse;\n  font-size: 13px;\n}\n\n.dss-md-table th,\n.dss-md-table td {\n  border: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));\n  padding: 4px 10px;\n  text-align: left;\n}\n\n.dss-md-table th {\n  background: rgba(128, 128, 128, 0.08);\n}\n\n.dss-md-hr {\n  border: none;\n  border-top: 1px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.1));\n  margin: 0.8em 0;\n}\n\n.dss-md-wiki {\n  padding: 0 4px;\n  border-radius: 4px;\n  background: rgba(77, 107, 254, 0.1);\n  color: var(--dsw-alias-brand-primary, #4d6bfe);\n}\n\n/* ---- 设置页「关于」 ------------------------------------------------------------ */\n.dss-about {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n  padding: 4px 2px;\n}\n\n.dss-about-title {\n  margin: 0;\n  font-size: 17px;\n  font-weight: 600;\n}\n\n.dss-about-list {\n  display: flex;\n  flex-direction: column;\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  border-radius: 10px;\n  overflow: hidden;\n}\n\n.dss-about-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 10px 14px;\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  font-size: 13px;\n}\n\n.dss-about-row:last-child {\n  border-bottom: none;\n}\n\n.dss-about-key {\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n.dss-about-value {\n  font-weight: 500;\n  text-align: right;\n  word-break: break-all;\n}\n\n/* ---- 媒体嵌入（![[wiki]] → 图片/视频/音频） ------------------------------------- */\n.dss-md-embed {\n  margin: 8px 0;\n}\n\n.dss-md-img {\n  display: block;\n  max-width: 100%;\n  max-height: 560px;\n  object-fit: contain;\n  border-radius: 8px;\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  cursor: zoom-in;\n  margin: 6px 0;\n}\n\n.dss-md-video {\n  display: block;\n  max-width: 100%;\n  border-radius: 8px;\n  margin: 6px 0;\n  background: #000;\n}\n\n.dss-md-audio {\n  display: block;\n  max-width: 100%;\n  margin: 6px 0;\n}\n\n.dss-md-media-note {\n  font-size: 12px;\n  color: var(--dsw-alias-label-secondary, #61666b);\n}\n\n/* 点击放大原图：全屏浮层 */\n.dss-zoom {\n  position: fixed;\n  inset: 0;\n  z-index: 1300;\n  background: rgba(0, 0, 0, 0.78);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: zoom-out;\n}\n\n.dss-zoom img {\n  max-width: 92vw;\n  max-height: 92vh;\n  object-fit: contain;\n  border-radius: 4px;\n}\n\n/* ---- PDF 预览（浏览器原生渲染） --------------------------------------------------- */\n.dss-md-pdf {\n  display: block;\n  width: 100%;\n  height: calc(100% - 8px);\n  min-height: 480px;\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.06));\n  border-radius: 8px;\n  background: #fff;\n}\n\n/* ---- Office/WPS 文档预览 ---------------------------------------------------------- */\n.dss-office {\n  height: 100%;\n  overflow: auto;\n  font-size: 14px;\n  line-height: 1.65;\n  color: var(--dsw-alias-label-primary, #1f2329);\n}\n\n/* docx：mammoth 输出的受控 HTML */\n.dss-office-doc {\n  padding: 2px 6px;\n}\n\n.dss-office-doc table,\n.dss-office-table table {\n  border-collapse: collapse;\n  margin: 8px 0;\n  max-width: 100%;\n}\n\n.dss-office-doc th,\n.dss-office-doc td,\n.dss-office-table th,\n.dss-office-table td {\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.12));\n  padding: 5px 8px;\n  text-align: left;\n  vertical-align: top;\n  word-break: break-word;\n}\n\n.dss-office-doc img {\n  max-width: 100%;\n  border-radius: 6px;\n}\n\n.dss-office-doc h1,\n.dss-office-doc h2,\n.dss-office-doc h3 {\n  margin: 10px 0 6px;\n}\n\n.dss-office-doc p {\n  margin: 6px 0;\n}\n\n.dss-office-doc pre {\n  background: var(--dsw-alias-bg-l2, rgba(0, 0, 0, 0.04));\n  border-radius: 6px;\n  padding: 8px;\n  overflow: auto;\n}\n\n/* xlsx：表格容器 + sheet 标签 */\n.dss-office-sheet {\n  display: flex;\n  flex-direction: column;\n}\n\n.dss-office-tabs {\n  position: sticky;\n  top: 0;\n  z-index: 1;\n  display: flex;\n  gap: 4px;\n  flex-wrap: wrap;\n  padding: 6px 2px;\n  background: var(--dsw-alias-bg-l1, #fff);\n  border-bottom: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.08));\n}\n\n.dss-office-tab {\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.14));\n  background: transparent;\n  color: var(--dsw-alias-label-secondary, #61666b);\n  border-radius: 6px;\n  padding: 3px 12px;\n  font-size: 12px;\n  cursor: pointer;\n}\n\n.dss-office-tab--on {\n  background: var(--dsw-alias-brand-primary, #4d6bfe);\n  border-color: var(--dsw-alias-brand-primary, #4d6bfe);\n  color: #fff;\n}\n\n.dss-office-table {\n  padding: 8px 6px;\n  overflow: auto;\n}\n\n/* pptx：幻灯片卡片列表 */\n.dss-office-slides {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  padding: 10px 6px;\n}\n\n.dss-office-slide {\n  display: flex;\n  gap: 12px;\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.1));\n  border-radius: 10px;\n  padding: 12px;\n  background: var(--dsw-alias-bg-l1, #fff);\n}\n\n.dss-office-slide-no {\n  flex: none;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--dsw-alias-brand-primary, #4d6bfe);\n  color: #fff;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 14px;\n  font-weight: 600;\n}\n\n.dss-office-slide-body {\n  flex: 1;\n  min-width: 0;\n}\n\n.dss-office-slide-lines {\n  margin: 0;\n  padding-left: 20px;\n}\n\n.dss-office-slide-lines li {\n  margin: 3px 0;\n}\n\n.dss-office-slide-img {\n  display: block;\n  max-width: 100%;\n  border-radius: 8px;\n  margin-top: 8px;\n  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, 0.08));\n}\n\n/* legacy：旧版 WPS 格式提示 */\n.dss-office-legacy {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  align-items: flex-start;\n  padding: 18px 6px;\n}\n\n.dss-office-legacy-title {\n  margin: 0;\n  font-size: 15px;\n  font-weight: 600;\n  color: var(--dsw-alias-label-primary, #1f2329);\n}\n\n/* 手机端：树/预览两栏上下堆叠，Office 预览保持可用 */\n@media (max-width: 720px) {\n  .dss-office-doc {\n    padding: 2px;\n  }\n\n  .dss-office-table {\n    padding: 6px 2px;\n  }\n\n  .dss-office-doc th,\n  .dss-office-doc td,\n  .dss-office-table th,\n  .dss-office-table td {\n    padding: 4px 5px;\n    font-size: 12px;\n  }\n\n  .dss-office-slide {\n    gap: 8px;\n    padding: 10px;\n  }\n\n  .dss-md-pdf {\n    min-height: 60vh;\n  }\n}\n";
 
 // src/client/index.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
@@ -147,6 +147,9 @@ function MarketPanel({ onClose }) {
   const [installed, setInstalled] = (0, import_react.useState)(null);
   const [installedQuery, setInstalledQuery] = (0, import_react.useState)("");
   const [installStates, setInstallStates] = (0, import_react.useState)({});
+  const [updateStates, setUpdateStates] = (0, import_react.useState)({});
+  const [uninstallStates, setUninstallStates] = (0, import_react.useState)({});
+  const [updateAllState, setUpdateAllState] = (0, import_react.useState)({ kind: "idle" });
   const [translations, setTranslations] = (0, import_react.useState)({});
   const [showOriginal, setShowOriginal] = (0, import_react.useState)({});
   const busyRef = (0, import_react.useRef)(/* @__PURE__ */ new Set());
@@ -163,20 +166,20 @@ function MarketPanel({ onClose }) {
       cancelled = true;
     };
   }, []);
-  (0, import_react.useEffect)(() => {
-    if (tab !== "installed" || installed !== null) return;
-    let cancelled = false;
-    fetch("/sidebar-shortcuts/api/plugins").then((res) => res.json()).then((body) => {
-      if (cancelled) return;
+  const reloadInstalled = (0, import_react.useCallback)(async () => {
+    try {
+      const res = await fetch("/sidebar-shortcuts/api/plugins");
+      const body = await res.json();
       if (body?.ok !== true) throw new Error(body?.error ?? "读取失败");
       setInstalled(body.plugins ?? []);
-    }).catch((err) => {
-      if (!cancelled) setError(err?.message ?? String(err));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [tab, installed]);
+    } catch (err) {
+      setError(err?.message ?? String(err));
+    }
+  }, []);
+  (0, import_react.useEffect)(() => {
+    if (tab !== "installed" || installed !== null) return;
+    void reloadInstalled();
+  }, [tab, installed, reloadInstalled]);
   const install = async (plugin) => {
     if (busyRef.current.has(plugin.name)) return;
     busyRef.current.add(plugin.name);
@@ -216,6 +219,78 @@ function MarketPanel({ onClose }) {
       setTranslations((prev) => ({ ...prev, [plugin.name]: `翻译失败：${err?.message ?? err}` }));
     } finally {
       busyRef.current.delete(`tr-${plugin.name}`);
+    }
+  };
+  const uninstallPlugin = async (plugin) => {
+    if (!window.confirm(`确定卸载插件「${plugin.name}」？将移除其依赖，重启宿主后完全生效。`)) return;
+    if (busyRef.current.has(`un-${plugin.name}`)) return;
+    busyRef.current.add(`un-${plugin.name}`);
+    setUninstallStates((prev) => ({ ...prev, [plugin.name]: { kind: "busy" } }));
+    try {
+      const res = await fetch("/sidebar-shortcuts/api/plugins/uninstall", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: plugin.name })
+      });
+      const body = await res.json();
+      setUninstallStates((prev) => ({
+        ...prev,
+        [plugin.name]: body?.ok === true ? { kind: "ok" } : { kind: "err", message: `卸载失败：${body?.error ?? body?.err ?? `HTTP ${res.status}`}` }
+      }));
+      if (body?.ok === true) void reloadInstalled();
+    } catch (err) {
+      setUninstallStates((prev) => ({ ...prev, [plugin.name]: { kind: "err", message: `卸载失败：${err?.message ?? err}` } }));
+    } finally {
+      busyRef.current.delete(`un-${plugin.name}`);
+    }
+  };
+  const updatePlugin = async (plugin) => {
+    if (busyRef.current.has(`up-${plugin.name}`)) return;
+    busyRef.current.add(`up-${plugin.name}`);
+    setUpdateStates((prev) => ({ ...prev, [plugin.name]: { kind: "busy" } }));
+    try {
+      const res = await fetch("/sidebar-shortcuts/api/plugins/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: plugin.name })
+      });
+      const body = await res.json();
+      setUpdateStates((prev) => ({
+        ...prev,
+        [plugin.name]: body?.ok === true ? { kind: "ok" } : { kind: "err", message: `更新失败：${body?.error ?? body?.err ?? `HTTP ${res.status}`}` }
+      }));
+      if (body?.ok === true) void reloadInstalled();
+    } catch (err) {
+      setUpdateStates((prev) => ({ ...prev, [plugin.name]: { kind: "err", message: `更新失败：${err?.message ?? err}` } }));
+    } finally {
+      busyRef.current.delete(`up-${plugin.name}`);
+    }
+  };
+  const updateAll = async () => {
+    const candidates = (installed ?? []).filter((plugin) => !plugin.builtin);
+    if (candidates.length === 0) {
+      setUpdateAllState({ kind: "err", message: "没有可更新的自装插件（内置插件由桌面客户端统一管理）" });
+      return;
+    }
+    if (!window.confirm(`将逐个更新 ${candidates.length} 个自装插件（可能耗时数分钟），确定？`)) return;
+    if (updateAllState.kind === "busy") return;
+    setUpdateAllState({ kind: "busy" });
+    try {
+      const res = await fetch("/sidebar-shortcuts/api/plugins/update-all", { method: "POST" });
+      const body = await res.json();
+      const failed = Array.isArray(body?.failed) ? body.failed : [];
+      const succeeded = Number(body?.succeeded ?? 0);
+      const total = Number(body?.total ?? candidates.length);
+      if (failed.length > 0) {
+        setUpdateAllState({ kind: "err", message: `全部更新完成 ${succeeded}/${total}，失败：${failed.join("、")}` });
+      } else if (body?.ok === true) {
+        setUpdateAllState({ kind: "ok" });
+      } else {
+        setUpdateAllState({ kind: "err", message: `全部更新未通过：${body?.error ?? "未知错误"}` });
+      }
+      void reloadInstalled();
+    } catch (err) {
+      setUpdateAllState({ kind: "err", message: `全部更新失败：${err?.message ?? err}` });
     }
   };
   const plugins = data?.plugins ?? [];
@@ -345,13 +420,43 @@ function MarketPanel({ onClose }) {
           }
         )
       ] }),
-      tab === "installed" && installed !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-list", children: installedFiltered.map((plugin) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-row-name", children: [
-          plugin.name,
-          plugin.builtin ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "dss-tag", children: "内置" }) : null
+      tab === "installed" && installed !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-list", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-installed-tools", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              type: "button",
+              className: "dss-mini-btn dss-mini-btn-primary",
+              onClick: () => void updateAll(),
+              disabled: updateAllState.kind === "busy",
+              children: updateAllState.kind === "busy" ? "全部更新中…（逐个进行，可能较久）" : "全部更新（内置跳过）"
+            }
+          ),
+          updateAllState.kind === "ok" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "dss-hint-ok", children: "全部更新完成，重启宿主生效" }) : null,
+          updateAllState.kind === "err" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "dss-hint-err", children: updateAllState.message }) : null
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-row-side", children: plugin.version ? `v${plugin.version}` : "" })
-      ] }, plugin.name)) })
+        installedFiltered.map((plugin) => {
+          const updateState = updateStates[plugin.name] ?? { kind: "idle" };
+          const uninstallState = uninstallStates[plugin.name] ?? { kind: "idle" };
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-row", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-row-name", children: [
+              plugin.name,
+              plugin.builtin ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "dss-tag", children: "内置" }) : null
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-row-side", children: plugin.version ? `v${plugin.version}` : "" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-row-actions", children: [
+              !plugin.builtin && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "dss-mini-btn", onClick: () => void updatePlugin(plugin), disabled: updateState.kind === "busy", children: updateState.kind === "busy" ? "更新中…" : "更新" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "dss-mini-btn dss-mini-btn-danger", onClick: () => void uninstallPlugin(plugin), disabled: uninstallState.kind === "busy", children: uninstallState.kind === "busy" ? "卸载中…" : "卸载" })
+              ] }),
+              updateState.kind === "ok" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "dss-hint-ok", children: "已是最新或已更新，重启宿主生效" }) : null,
+              updateState.kind === "err" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "dss-hint-err", children: updateState.message }) : null,
+              uninstallState.kind === "ok" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "dss-hint-ok", children: "已卸载，重启宿主生效" }) : null,
+              uninstallState.kind === "err" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "dss-hint-err", children: uninstallState.message }) : null
+            ] })
+          ] }, plugin.name);
+        })
+      ] })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-modal-foot", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "dss-mp-stats", children: [
       "社区数据源：",
@@ -365,6 +470,7 @@ function mediaKind(target) {
   if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(target)) return "image";
   if (/\.(mp4|mov|webm|m4v)$/i.test(target)) return "video";
   if (/\.(mp3|m4a|wav|ogg)$/i.test(target)) return "audio";
+  if (/\.pdf$/i.test(target)) return "pdf";
   return "other";
 }
 function MediaEmbed({ target, noteRel }) {
@@ -444,7 +550,58 @@ function MediaDirect({ rel }) {
   if (kind === "audio") {
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("audio", { className: "dss-md-audio", src, controls: true, preload: "metadata" });
   }
+  if (kind === "pdf") {
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("iframe", { className: "dss-md-pdf", src, title: rel });
+  }
   return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "dss-muted", children: "该文件类型暂不支持预览" });
+}
+function OfficePreview({ rel, data, onOpenExternally }) {
+  if (data.kind === "doc") {
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-office dss-office-doc", dangerouslySetInnerHTML: { __html: data.html } });
+  }
+  if (data.kind === "sheet") {
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SheetPreview, { sheets: data.sheets });
+  }
+  if (data.kind === "slides") {
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-office dss-office-slides", children: data.slides.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "dss-muted", children: "未能解析出幻灯片内容" }) : data.slides.map((slide) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-office-slide", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-office-slide-no", children: slide.no }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-office-slide-body", children: [
+        slide.lines.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { className: "dss-office-slide-lines", children: slide.lines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: line }, index)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "dss-muted", children: "（本页无可提取文本）" }),
+        slide.images.map((image, index) => "dataUri" in image ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { className: "dss-office-slide-img", src: image.dataUri, alt: "", loading: "lazy" }, index) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: "dss-muted", children: [
+          "（内嵌图片过大已省略：",
+          (image.bytes / 1024 / 1024).toFixed(1),
+          "MB）"
+        ] }, index))
+      ] })
+    ] }, slide.no)) });
+  }
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-office dss-office-legacy", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: "dss-office-legacy-title", children: [
+      "无法内嵌预览（",
+      data.ext,
+      "）"
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: data.hint }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "dss-mini-btn", onClick: () => onOpenExternally(rel), children: "用默认程序打开" })
+  ] });
+}
+function SheetPreview({ sheets }) {
+  const [tab, setTab] = (0, import_react.useState)(0);
+  const index = Math.min(tab, sheets.length - 1);
+  const sheet = sheets[index];
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "dss-office dss-office-sheet", children: [
+    sheets.length > 1 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-office-tabs", children: sheets.map((item, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+      "button",
+      {
+        type: "button",
+        className: i === index ? "dss-office-tab dss-office-tab--on" : "dss-office-tab",
+        onClick: () => setTab(i),
+        children: item.name
+      },
+      item.name
+    )) }) : null,
+    sheet ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-office-table", dangerouslySetInnerHTML: { __html: sheet.html } }) : null
+  ] });
 }
 function renderInline(text, noteRel) {
   const nodes = [];
@@ -626,7 +783,7 @@ function TreeView({ rel, dirs, expanded, selected, filter, onToggle, onSelect })
   for (const file of dirState.data.files) {
     if (!matchName(file.name)) continue;
     const fileRel = rel ? `${rel}/${file.name}` : file.name;
-    const icon = file.kind === "image" ? "🖼️" : file.kind === "video" ? "🎬" : file.kind === "audio" ? "🎵" : "📄";
+    const icon = file.kind === "image" ? "🖼️" : file.kind === "video" ? "🎬" : file.kind === "audio" ? "🎵" : file.kind === "pdf" ? "📕" : file.kind === "doc" ? "📝" : file.kind === "sheet" ? "📊" : file.kind === "slides" ? "📽️" : file.kind === "legacy" ? "🗎" : "📄";
     nodes.push(
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
         "button",
@@ -656,6 +813,7 @@ function KnowledgePanel({ onClose }) {
   const [selected, setSelected] = (0, import_react.useState)(null);
   const [content, setContent] = (0, import_react.useState)(null);
   const [mediaRel, setMediaRel] = (0, import_react.useState)(null);
+  const [office, setOffice] = (0, import_react.useState)(null);
   const [loadingFile, setLoadingFile] = (0, import_react.useState)(false);
   const [filter, setFilter] = (0, import_react.useState)("");
   (0, import_react.useEffect)(() => {
@@ -701,13 +859,36 @@ function KnowledgePanel({ onClose }) {
   const openFile = async (rel, kind) => {
     setSelected(rel);
     setError("");
-    if (kind !== "md") {
+    if (kind === "image" || kind === "video" || kind === "audio" || kind === "pdf") {
       setContent(null);
+      setOffice(null);
       setMediaRel(rel);
       setLoadingFile(false);
       return;
     }
+    if (kind === "doc" || kind === "sheet" || kind === "slides" || kind === "legacy") {
+      setMediaRel(null);
+      setContent(null);
+      setOffice(null);
+      setLoadingFile(true);
+      try {
+        const res = await fetch(`/sidebar-shortcuts/api/vault/office?path=${encodeURIComponent(rel)}`);
+        const body = await res.json();
+        if (body?.ok !== true) throw new Error(body?.error ?? `HTTP ${res.status}`);
+        const officeKind = String(body.kind ?? "");
+        if (officeKind === "doc") setOffice({ kind: "doc", html: String(body.html ?? "") });
+        else if (officeKind === "sheet") setOffice({ kind: "sheet", sheets: Array.isArray(body.sheets) ? body.sheets : [] });
+        else if (officeKind === "slides") setOffice({ kind: "slides", slides: Array.isArray(body.slides) ? body.slides : [] });
+        else setOffice({ kind: "legacy", ext: String(body.ext ?? ""), hint: String(body.hint ?? "") });
+      } catch (err) {
+        setError(`预览失败：${err?.message ?? err}`);
+      } finally {
+        setLoadingFile(false);
+      }
+      return;
+    }
     setMediaRel(null);
+    setOffice(null);
     setLoadingFile(true);
     try {
       const res = await fetch(`/sidebar-shortcuts/api/vault/read?path=${encodeURIComponent(rel)}`);
@@ -719,6 +900,17 @@ function KnowledgePanel({ onClose }) {
       setError(`读取失败：${err?.message ?? err}`);
     } finally {
       setLoadingFile(false);
+    }
+  };
+  const openFileExternally = async (rel) => {
+    setOpenHint("");
+    try {
+      const res = await fetch(`/sidebar-shortcuts/api/vault/open-file?path=${encodeURIComponent(rel)}`, { method: "POST" });
+      const body = await res.json();
+      if (body?.ok !== true) throw new Error(body?.error ?? `HTTP ${res.status}`);
+      setOpenHint("已用默认程序打开");
+    } catch (err) {
+      setOpenHint(`打开失败：${err?.message ?? err}`);
     }
   };
   const openVaultFolder = async () => {
@@ -775,7 +967,7 @@ function KnowledgePanel({ onClose }) {
           openHint !== "" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "dss-hint-ok", children: openHint }) : null
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-kb-preview-body", children: loadingFile ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "dss-muted", children: "加载中…" }) : error !== "" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "dss-muted", children: error }) : mediaRel !== null ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MediaDirect, { rel: mediaRel }) : content === null ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "dss-muted", children: "从左侧目录树点选笔记（📄）阅读，或点视频（🎬）/音频（🎵）/图片（🖼️）直接预览（只读，不会改动你的文件）" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-md", children: renderMarkdown(content.text, content.rel) }) })
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-kb-preview-body", children: loadingFile ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "dss-muted", children: "加载中…" }) : error !== "" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "dss-muted", children: error }) : mediaRel !== null ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MediaDirect, { rel: mediaRel }) : office !== null ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OfficePreview, { rel: selected ?? "", data: office, onOpenExternally: (path) => void openFileExternally(path) }) : content === null ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "dss-muted", children: "从左侧目录树点选笔记（📄）阅读，或直接预览图片（🖼️）/视频（🎬）/音频（🎵）/PDF（📕）/Word（📝）/表格（📊）/幻灯片（📽️）（只读，不会改动你的文件）" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "dss-md", children: renderMarkdown(content.text, content.rel) }) })
     ] })
   ] }) });
 }

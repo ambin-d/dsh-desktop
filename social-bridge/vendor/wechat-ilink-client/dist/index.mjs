@@ -504,9 +504,9 @@ const UPLOAD_MAX_RETRIES = 3;
 * Returns the download encrypted_query_param from the CDN `x-encrypted-param` header.
 */
 async function uploadBufferToCdn(params) {
-	const { buf, uploadParam, filekey, cdnBaseUrl, aeskey } = params;
+	const { buf, uploadParam, uploadFullUrl, filekey, cdnBaseUrl, aeskey } = params;
 	const ciphertext = encryptAesEcb(buf, aeskey);
-	const cdnUrl = buildCdnUploadUrl({
+	const cdnUrl = uploadFullUrl || buildCdnUploadUrl({
 		cdnBaseUrl,
 		uploadParam,
 		filekey
@@ -568,11 +568,14 @@ async function uploadMedia(params) {
 		no_need_thumb: true,
 		aeskey: aeskey.toString("hex")
 	});
+	// 兼容两种响应：新格式直接给 upload_full_url（完整上传地址），旧格式给 upload_param 需自行拼 URL
+	const uploadFullUrl = uploadUrlResp.upload_full_url;
 	const uploadParam = uploadUrlResp.upload_param;
-	if (!uploadParam) throw new Error(`getUploadUrl returned no upload_param: ${JSON.stringify(uploadUrlResp)}`);
+	if (!uploadFullUrl && !uploadParam) throw new Error(`getUploadUrl returned no upload_param: ${JSON.stringify(uploadUrlResp)}`);
 	const { downloadParam } = await uploadBufferToCdn({
 		buf: plaintext,
 		uploadParam,
+		uploadFullUrl,
 		filekey,
 		cdnBaseUrl,
 		aeskey
